@@ -1,82 +1,71 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import Filter from '../components/Filter';
 import { useState, useEffect } from 'react';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, Feather } from '@expo/vector-icons';
 
-interface MenuItems {
+type MenuItems = {
   name: string;
   price: string;
   category: string;
-  imageUrl: any;
 }
 
 export default function MostSelling() {
   const [items, setItems] = useState<MenuItems[]>([]);
   const [showFilter, setShowFilter] = useState(false);
-
-  useEffect(() => {
-    fetchMostSellingItems();
-  }, []);
+  const [loading, setLoading] = useState(true);
 
   const fetchMostSellingItems = async () => {
     try {
-      const response = await fetch('https://api-server.krontiva.africa/api:uEBBwbSs/filter/orders/revenue/by/date/most/selling/items', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          restaurantId: global.userData?.restaurantId,
-          branchId: global.userData?.branchId,
-          date: new Date().toISOString().split('T')[0]
-        })
-      });
+      setLoading(true);
+      const response = await fetch(
+        "https://api-server.krontiva.africa/api:uEBBwbSs/filter/orders/revenue/by/date/most/selling/items",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            restaurantId: global.userData?.restaurantId,
+            branchId: global.userData?.branchId,
+            date: new Date().toISOString().split("T")[0]
+          })
+        }
+      );
 
       const data = await response.json();
-      console.log('Most selling items response:', data);
+      console.log('API Response:', data);
 
-      if (data.outputNames) {
+      if (data?.outputNames) {
         const transformedItems = Object.entries(data.outputNames)
-          .map(([name, details]) => ({
-            name,
-            price: (details as [number, string, { url: string }])[1],
-            category: (details as [number, string, { url: string }])[0].toString(),
-            imageUrl: (details as [number, string, { url: string }])[2]?.url || require('../assets/images/pie.png')
-          }))
-          .sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
-        
-        console.log('Transformed items:', transformedItems);
+          .map(([name, details]: [string, any]) => {
+            return {
+              name: name,
+              price: Array.isArray(details) ? details[1]?.toString() || "0.00" : "0.00",
+              category: Array.isArray(details) ? details[0]?.toString() || "0" : "0"
+            };
+          });
         setItems(transformedItems);
       } else {
         setItems([]);
       }
     } catch (error) {
-      console.error('Error fetching most selling items:', error);
+      console.error("Error:", error);
       setItems([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleFilterSelect = async (value: string) => {
-    console.log('Selected:', value);
     setShowFilter(false);
+    setLoading(true);
     
     const apiUrl = value === 'Today' 
       ? 'https://api-server.krontiva.africa/api:uEBBwbSs/filter/orders/revenue/by/date/most/selling/items/today'
       : 'https://api-server.krontiva.africa/api:uEBBwbSs/filter/orders/revenue/by/date/most/selling/items';
 
     try {
-      console.log(`Fetching ${value.toLowerCase()} data...`);
-      console.log('Request params:', {
-        restaurantId: global.userData?.restaurantId,
-        branchId: global.userData?.branchId,
-        date: new Date().toISOString().split('T')[0]
-      });
-
       const response = await fetch(apiUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           restaurantId: global.userData?.restaurantId,
           branchId: global.userData?.branchId,
@@ -85,40 +74,44 @@ export default function MostSelling() {
       });
 
       const data = await response.json();
-      console.log(`${value} API Response:`, data);
 
-      if (data.outputNames) {
+      if (data?.outputNames) {
         const transformedItems = Object.entries(data.outputNames)
-          .map(([name, details]) => ({
-            name,
-            price: (details as [number, string, { url: string }])[1],
-            category: (details as [number, string, { url: string }])[0].toString(),
-            imageUrl: (details as [number, string, { url: string }])[2]?.url || require('../assets/images/pie.png')
-          }))
-          .sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
-
-        console.log('Transformed items:', transformedItems);
+          .map(([name, details]: [string, any]) => {
+            return {
+              name: name,
+              price: Array.isArray(details) ? details[1]?.toString() || '0.00' : '0.00',
+              category: Array.isArray(details) ? details[0]?.toString() || '0' : '0'
+            };
+          });
         setItems(transformedItems);
       } else {
-        console.log('No data in response');
         setItems([]);
       }
     } catch (error) {
-      console.error(`Error fetching ${value.toLowerCase()} items:`, error);
+      console.error('Error:', error);
       setItems([]);
+    } finally {
+      setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchMostSellingItems();
+  }, []);
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Most Selling Items</Text>
-      <TouchableOpacity 
-        onPress={() => setShowFilter(true)}
-        style={styles.filterButton}
-      >
-        <Text style={styles.filter}>Filter</Text>
-      </TouchableOpacity>
-      
+      <View style={styles.header}>
+        <Text style={styles.title}>Most Selling Items</Text>
+        <TouchableOpacity 
+          onPress={() => setShowFilter(true)}
+          style={styles.filterButton}
+        >
+          <Feather name="filter" size={18} color="#FE5B18" />
+          <Text style={styles.filterText}>Filter</Text>
+        </TouchableOpacity>
+      </View>
 
       <Filter 
         visible={showFilter}
@@ -126,29 +119,40 @@ export default function MostSelling() {
         onSelect={handleFilterSelect}
       />
 
-      <ScrollView style={styles.itemsContainer}>
-        {Array.isArray(items) && items.length > 0 ? (
-          items.map((item: MenuItems, index) => (
-            <View key={index} style={styles.itemContainer}>
-              <Image 
-                source={{ uri: item.imageUrl }}
-                style={styles.image} 
-              />
+      <ScrollView 
+        style={styles.itemsContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <MaterialIcons name="restaurant" size={40} color="#FE5B18" />
+            <Text style={styles.loadingText}>Loading items...</Text>
+          </View>
+        ) : items.length > 0 ? (
+          items.map((item, index) => (
+            <View key={index} style={styles.itemCard}>
+              <View style={styles.rankBadge}>
+                <Text style={styles.rankText}>{index + 1}</Text>
+              </View>
               <View style={styles.details}>
-                <View>
-                  <Text style={styles.name}>{item.name || 'Item Name'}</Text>
-                  <Text style={styles.category}>Quantity: {item.category || '0'}</Text>
+                <View style={styles.itemInfo}>
+                  <Text style={styles.name}>{item.name}</Text>
+                  <View style={styles.quantityBadge}>
+                    <Text style={styles.category}>Qty: {item.category}</Text>
+                  </View>
                 </View>
-                <View style={styles.rightSection}>
-                  <Text style={styles.price}>GH₵{item.price || '0.00'}</Text>
+                <View style={styles.priceContainer}>
+                  <Text style={styles.currency}>GH₵</Text>
+                  <Text style={styles.price}>{item.price}</Text>
                 </View>
               </View>
             </View>
           ))
         ) : (
           <View style={styles.emptyStateContainer}>
-            <MaterialIcons name="restaurant" size={48} color="#E5E5E5" />
+            <MaterialIcons name="restaurant-menu" size={60} color="#E5E5E5" />
             <Text style={styles.noItemsTitle}>No Items Available</Text>
+            <Text style={styles.noItemsSubtitle}>Check back later for updates</Text>
           </View>
         )}
       </ScrollView>
@@ -156,111 +160,141 @@ export default function MostSelling() {
   );
 }
 
+const { width } = Dimensions.get('window');
+
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    padding: 10,
     backgroundColor: '#ffffff',
-    borderRadius: 12,
-    marginBottom: 10,
-    marginTop: 0,
-    width: '110%',
-    alignSelf: 'flex-start',
-    marginLeft: 10,
-    maxHeight: 500,
+    borderRadius: 16,
+    marginHorizontal: 16,
+    marginVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    width: width - 32,
+    alignSelf: 'center'
   },
-  itemsContainer: {
-    flexGrow: 1,
-    overflow: 'scroll',
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000000',
-    marginBottom: 15,
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1A1A1A',
   },
   filterButton: {
-    position: 'absolute',
-    right: 20,
-    top: 20,
-    marginRight: 50,
-  },
-  filter: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    backgroundColor: '#FE5B18',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 10,
-  },
-  itemContainer: {
     flexDirection: 'row',
-    //backgroundColor: '#1A1A1A',
-    borderRadius: 12,
-    padding: 10,
-    marginBottom: 10,
     alignItems: 'center',
-  },
-  image: {
-    width: 60,
-    height: 60,
+    backgroundColor: '#FFF5F1',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 8,
+  },
+  filterText: {
+    color: '#FE5B18',
+    marginLeft: 4,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  itemsContainer: {
+    marginTop: 8,
+  },
+  itemCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    marginBottom: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+  },
+  rankBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#FFF5F1',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 12,
+  },
+  rankText: {
+    color: '#FE5B18',
+    fontSize: 14,
+    fontWeight: '600',
   },
   details: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  itemInfo: {
+    flex: 1,
   },
   name: {
-    color: '#000000',
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
+    color: '#1A1A1A',
     marginBottom: 4,
+  },
+  quantityBadge: {
+    backgroundColor: '#F8F9FA',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
   },
   category: {
-    color: '#FE5B18',
+    color: '#666666',
     fontSize: 12,
-    marginBottom: 4,
+    fontWeight: '500',
   },
-  servings: {
-    color: '#999999',
-    fontSize: 12,
+  priceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  rightSection: {
-    alignItems: 'flex-end',
+  currency: {
+    color: '#1A1A1A',
+    fontSize: 14,
+    fontWeight: '500',
+    marginRight: 2,
   },
   price: {
-    color: '#000000',
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 4,
-    marginRight: 45,
+    color: '#1A1A1A',
+    fontSize: 18,
+    fontWeight: '700',
   },
-  time: {
-    color: '#999999',
-    fontSize: 12,
-    marginRight: 50,
-  },
-  emptyStateContainer: {
-    flex: 1,
+  loadingContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 40,
-    //backgroundColor: '#FFFFFF',
-   // borderRadius: 16,
-   // marginVertical: 10,
-    //shadowColor: '#000',
-    //shadowOffset: { width: 0, height: 2 },
-    //shadowOpacity: 0.05,
-    //shadowRadius: 8,
-    //elevation: 2,
+  },
+  loadingText: {
+    color: '#666666',
+    marginTop: 12,
+    fontSize: 16,
+  },
+  emptyStateContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
   },
   noItemsTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#666666',
+    color: '#1A1A1A',
     marginTop: 16,
-    marginBottom: 8,
   },
-  
+  noItemsSubtitle: {
+    fontSize: 14,
+    color: '#666666',
+    marginTop: 8,
+  },
 });

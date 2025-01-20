@@ -51,10 +51,17 @@ interface EditFoodModalProps {
   onClose: () => void;
   onSave: (food: FoodType) => void;
   categories: MenuItem[];
-  itemId: string | undefined;
+  itemId?: string;
 }
 
-export default function EditFoodModal({ visible, food, onClose, onSave, categories, itemId }: EditFoodModalProps) {
+const EditFoodModal: React.FC<EditFoodModalProps> = ({
+  visible,
+  food,
+  onClose,
+  onSave,
+  categories,
+  itemId
+}) => {
   const [id, setId] = useState(food?.id || '');
   const [name, setName] = useState(food?.name || '');
   const [price, setPrice] = useState(food?.price?.toString() || '');
@@ -136,9 +143,9 @@ export default function EditFoodModal({ visible, food, onClose, onSave, categori
   return (
     <Modal
       visible={visible}
-      animationType="slide"
       transparent={true}
-      statusBarTranslucent
+      animationType="slide"
+      onRequestClose={onClose}
     >
       <View style={styles.modalContainer}>
         <TouchableOpacity 
@@ -240,7 +247,7 @@ export default function EditFoodModal({ visible, food, onClose, onSave, categori
       </View>
     </Modal>
   );
-}
+};
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -393,4 +400,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
   },
-}); 
+});
+
+export default EditFoodModal; 

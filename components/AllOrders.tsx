@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import OrdersFilter from './OrdersFilter';
 import { OrderFilters } from '../types/orders';
 import { MaterialIcons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 
 interface OrderItem {
   id: string;
@@ -18,6 +19,7 @@ interface OrderItem {
   dropoffName: string;
   deliveryPrice: number;
   orderPrice: number;
+  products: any[];
 }
 
 interface Order {
@@ -115,6 +117,25 @@ export default function AllOrders({ onFilterPress, orders, selectedDate }: AllOr
     };
   }, [fetchOrders, selectedDate]);
 
+  const handleOrderPress = (item: OrderItem) => {
+    console.log('Full order details:', item); // Debug log
+    router.push({
+      pathname: '/all-orders-details',
+      params: {
+        ...item, // Spread all properties from the item
+        // Convert numbers to strings for URL params
+        totalPrice: item.totalPrice?.toString(),
+        deliveryPrice: item.deliveryPrice?.toString(),
+        orderPrice: item.orderPrice?.toString(),
+        // Ensure optional fields have fallbacks
+        courierName: item.courierName || '',
+        dropoffName: item.dropoffName || '',
+        paymentStatus: item.paymentStatus || 'Pending',
+        products: JSON.stringify(item.products),
+      }
+    });
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -136,7 +157,11 @@ export default function AllOrders({ onFilterPress, orders, selectedDate }: AllOr
         <FlatList
           data={filteredOrders}
           renderItem={({ item }) => (
-            <View style={styles.orderItem}>
+            <TouchableOpacity 
+              style={styles.orderItem}
+              activeOpacity={0.7}
+              onPress={() => handleOrderPress(item)}
+            >
               <View style={styles.orderHeader}>
                 <Text style={styles.orderNumber}>#{item.orderNumber}</Text>
                 <Text style={[
@@ -154,7 +179,7 @@ export default function AllOrders({ onFilterPress, orders, selectedDate }: AllOr
                 </View>
                 <View style={styles.priceContainer}>
                   <Text style={styles.totalPrice}>
-                  GH₵{typeof item.totalPrice === 'number' ? 
+                    GH₵{typeof item.totalPrice === 'number' ? 
                       item.totalPrice.toFixed(2) : 
                       '0.00'
                     }
@@ -175,7 +200,7 @@ export default function AllOrders({ onFilterPress, orders, selectedDate }: AllOr
                   <Text style={styles.dropoffName}>{item.dropoffName}</Text>
                 </View>
               </View>
-            </View>
+            </TouchableOpacity>
           )}
           keyExtractor={item => item.id.toString()}
           contentContainerStyle={styles.listContainer}

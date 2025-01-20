@@ -190,28 +190,29 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
-    paddingTop: 60,
+    paddingTop: 40,
     backgroundColor: '#F',
   },
   profileSection: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginTop: -10,
   },
   profileImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginRight: 15,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 10,
   },
   textContainer: {
     flex: 1,
   },
   restaurantName: {
     color: '#1A1A1A',
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 5,
+    marginBottom: 3,
   },
   locationContainer: {
     flexDirection: 'row',
@@ -220,12 +221,13 @@ const styles = StyleSheet.create({
   },
   location: {
     color: '#666666',
-    fontSize: 16,
+    fontSize: 14,
   },
   rightContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 15,
+    gap: 5,
+    marginTop: -5,
   },
   bottomSection: {
     flexDirection: 'row',

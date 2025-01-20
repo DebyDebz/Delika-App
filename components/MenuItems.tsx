@@ -198,7 +198,11 @@ export default function MenuItems() {
           </View>
           <TouchableOpacity 
             style={styles.editButton}
-            onPress={() => handleEdit(item)}
+            onPress={() => {
+              setSelectedFood(item);
+              setIsEditModalVisible(true);
+              console.log('Edit button pressed, modal visibility:', isEditModalVisible);
+            }}
           >
             <MaterialIcons name="edit" size={18} color="#FFFFFF" />
           </TouchableOpacity>
@@ -340,7 +344,10 @@ export default function MenuItems() {
       <EditFoodModal
         visible={isEditModalVisible}
         food={selectedFood}
-        onClose={() => setIsEditModalVisible(false)}
+        onClose={() => {
+          setIsEditModalVisible(false);
+          setSelectedFood(null);
+        }}
         onSave={handleSaveEdit}
         categories={menuCategories}
         itemId={selectedCategory || undefined}

@@ -7,13 +7,12 @@
     "icon": "./assets/images/icon.png",
     "scheme": "Delika",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "package": "com.krontivaafrica.delika.app",
-      "googleServicesFile": "./google-services.json",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
@@ -73,7 +72,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "60f2dd49-114a-485b-a90b-5fd0742b9009"
+        "projectId": "ece39ec1-a597-42c0-aa4d-b5756348ee7e"
       }
     }
   }

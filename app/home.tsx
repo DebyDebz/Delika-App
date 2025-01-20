@@ -14,6 +14,7 @@ import { BlurView } from 'expo-blur';
 import NotificationModal from '../components/NotificationModal';
 import NotificationIcon from '../components/NotificationIcon';
 import { Color } from '@/constants/GlobalStyles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 declare global {
   var userData: any;
@@ -45,19 +46,57 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const checkUserData = async () => {
-      if (!globalThis.userData) {
-        router.replace('/');
-        return;
+      try {
+        const userData = await AsyncStorage.getItem('userData');
+        if (!userData) {
+          console.log('Debug - No userData in AsyncStorage'); // Debug log
+          setTimeout(() => {
+            router.replace('/');
+          }, 0);
+          return;
+        }
+
+        console.log('Debug - Raw userData:', userData); // Debug log
+
+        // Parse and validate user data
+        const parsedUserData = JSON.parse(userData);
+        console.log('Debug - Parsed userData:', parsedUserData); // Debug log
+        
+        // Validate and normalize image data
+        if (parsedUserData?.image) {
+          console.log('Debug - Original image data:', parsedUserData.image); // Debug log
+          
+          if (typeof parsedUserData.image === 'object') {
+            const url = parsedUserData.image.url;
+            parsedUserData.image = {
+              url: typeof url === 'number' ? String(url) : (url || ''),
+            };
+          } else {
+            const imageValue = parsedUserData.image;
+            parsedUserData.image = {
+              url: typeof imageValue === 'number' ? String(imageValue) : (imageValue || ''),
+            };
+          }
+          
+          console.log('Debug - Normalized image data:', parsedUserData.image); // Debug log
+        }
+
+        globalThis.userData = parsedUserData;
+
+        setRestaurantData({
+          restaurantName: parsedUserData._restaurantTable?.[0]?.restaurantName || 'No Name',
+          branchLocation: parsedUserData.branchesTable?.branchLocation || 'No Location',
+          image: parsedUserData.image?.url || ''
+        });
+
+        // Immediately fetch dashboard data if userData exists
+        fetchDashboardData(selectedDate);
+      } catch (error) {
+        console.error('Error checking user data:', error);
+        setTimeout(() => {
+          router.replace('/');
+        }, 0);
       }
-
-      setRestaurantData({
-        restaurantName: globalThis.userData._restaurantTable[0].restaurantName || 'No Name',
-        branchLocation: globalThis.userData.branchesTable.branchLocation || 'No Location',
-        image: globalThis.userData.image?.url || ''
-      });
-
-      // Immediately fetch dashboard data if userData exists
-      fetchDashboardData(selectedDate);
     };
 
     checkUserData();
@@ -168,12 +207,12 @@ export default function HomeScreen() {
         <View style={styles.profileSection}>
           <View style={styles.textContainer}>
             <Text style={styles.restaurantName}>
-              {globalThis.userData?._restaurantTable[0].restaurantName}
+              {globalThis.userData?._restaurantTable?.[0]?.restaurantName || 'Restaurant Name'}
             </Text>
             <View style={styles.locationContainer}>
               <Ionicons name="location" size={20} color="#666666" />
               <Text style={styles.location}>
-                {globalThis.userData?.branchesTable.branchLocation}
+                {globalThis.userData?.branchesTable?.branchLocation || 'Location'}
               </Text>
             </View>
           </View>
@@ -184,12 +223,65 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </Animated.View>
             <TouchableOpacity onPress={() => router.push('/profile')}>
-              {globalThis.userData?.image?.url && (
-                <Image 
-                  source={{ uri: globalThis.userData.image.url }} 
-                  style={styles.profileImage}
-                />
-              )}
+              {(() => {
+                try {
+                  console.log('Debug - Raw image data:', globalThis.userData?.image); // Debug log
+
+                  // Strict type checking and validation for image URL
+                  const imageData = globalThis.userData?.image;
+                  let imageUrl = '';
+                  
+                  if (!imageData) {
+                    console.log('Debug - No image data found'); // Debug log
+                    throw new Error('No image data');
+                  }
+
+                  if (typeof imageData === 'object' && imageData !== null) {
+                    console.log('Debug - Image data is object:', imageData); // Debug log
+                    if (imageData.url) {
+                      imageUrl = String(imageData.url).trim();
+                    }
+                  } else if (typeof imageData === 'string') {
+                    console.log('Debug - Image data is string:', imageData); // Debug log
+                    imageUrl = imageData.trim();
+                  } else if (typeof imageData === 'number') {
+                    console.log('Debug - Image data is number:', imageData); // Debug log
+                    imageUrl = String(imageData);
+                  }
+
+                  console.log('Debug - Final image URL:', imageUrl); // Debug log
+
+                  // Only render Image component if we have a valid URL string
+                  if (imageUrl && imageUrl.length > 0) {
+                    return (
+                      <View>
+                        <Image 
+                          source={{ 
+                            uri: imageUrl,
+                            headers: {
+                              Accept: 'image/*',
+                            },
+                          }} 
+                          style={styles.profileImage}
+                          defaultSource={require('../assets/images/icon.png')}
+                          onError={(error) => {
+                            console.log('Image loading error:', error);
+                          }}
+                        />
+                      </View>
+                    );
+                  }
+                } catch (error) {
+                  console.log('Error rendering image:', error);
+                }
+                
+                // Fallback to default icon
+                return (
+                  <View style={[styles.profileImage, { backgroundColor: '#F0F0F0', justifyContent: 'center', alignItems: 'center' }]}>
+                    <Ionicons name="person" size={30} color="#666666" />
+                  </View>
+                );
+              })()}
             </TouchableOpacity>
           </View>
         </View>
@@ -314,20 +406,20 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
-    paddingTop: 60,
-    backgroundColor: '#F',
+    paddingTop: 40,
+    backgroundColor: '#FFFFFF',
   },
   profileSection: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginTop: -10,
   },
   profileImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     marginRight: 15,
-    marginTop: 10,
     marginLeft: 10,
   },
   textContainer: {
@@ -335,9 +427,9 @@ const styles = StyleSheet.create({
   },
   restaurantName: {
     color: '#1A1A1A',
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 5,
+    marginBottom: 3,
   },
   locationContainer: {
     flexDirection: 'row',
@@ -346,7 +438,7 @@ const styles = StyleSheet.create({
   },
   location: {
     color: '#666666',
-    fontSize: 16,
+    fontSize: 14,
   },
   bottomSection: {
     flexDirection: 'row',
@@ -449,7 +541,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 10,
-    marginTop: -400,
+    marginTop: -450,
   },
   cardsContainer: {
     paddingVertical: 10,
@@ -461,5 +553,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
+    marginTop: -5,
   },
 });

@@ -13,6 +13,7 @@ export default function ProfileEditScreen() {
         options={{
           headerShown: true,
           title: 'Edit Profile',
+          headerTitleAlign: 'center',
           headerLeft: () => (
             <TouchableOpacity 
               style={styles.backButton}
@@ -46,7 +47,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   backButton: {
-    marginLeft: 16,
+    marginLeft: 10,
     padding: 8,
     zIndex: 1,
   },

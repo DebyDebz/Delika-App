@@ -182,13 +182,13 @@ export default function EditMember({ visible, onClose, member }: EditMemberProps
       <View style={styles.overlay}>
         <View style={styles.container}>
           <View style={styles.header}>
-            <View style={styles.headerContent}>
-              <TouchableOpacity 
-                style={styles.backButton}
-                onPress={onClose}
-              >
-                <MaterialIcons name="arrow-back-ios" size={24} color="#1E293B" />
-              </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={onClose}
+            >
+              <MaterialIcons name="arrow-back" size={24} color="#1E293B" />
+            </TouchableOpacity>
+            <View style={styles.headerTitleContainer}>
               <Text style={styles.headerTitle}>Edit Staff Profile</Text>
             </View>
           </View>
@@ -414,19 +414,22 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
-  },
-  headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
   },
-  backButton: {
-    marginRight: 16,
+  headerTitleContainer: {
+    flex: 1,
+    alignItems: 'center',
+    marginRight: 40, // Compensate for back button width
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: '600',
     color: '#1E293B',
+  },
+  backButton: {
+    padding: 8,
   },
   content: {
     flex: 1,
@@ -585,6 +588,7 @@ const styles = StyleSheet.create({
   dropdownListContainer: {
     position: 'relative',
     zIndex: 1000,
+    maxHeight: 300,
   },
   dropdownList: {
     backgroundColor: '#FFF',
@@ -600,6 +604,8 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
+    maxHeight: 300, // Increased height for dropdown
+    zIndex: 1000,
   },
   dropdownItem: {
     flexDirection: 'row',

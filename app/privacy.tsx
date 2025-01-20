@@ -14,6 +14,7 @@ export default function PrivacyScreen() {
           headerShown: true,
           title: 'Privacy Policy',
           headerBackVisible: false,
+          headerTitleAlign: 'center',
           headerLeft: () => (
             <TouchableOpacity 
               style={styles.backButton}

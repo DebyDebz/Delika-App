@@ -4,6 +4,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Color } from '../constants/GlobalStyles';
 import { router } from 'expo-router';
 
+const { width } = Dimensions.get('window');
+
 type IconName = keyof typeof MaterialIcons.glyphMap;
 
 const AboutUs = () => {
@@ -68,57 +70,16 @@ const AboutUs = () => {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Vision Statement */}
-        <View style={styles.visionSection}>
-          <Text style={styles.visionText}>
-            Empowering restaurants with next-generation technology solutions
-          </Text>
-          <View style={styles.visionDivider} />
+        {/* Main Image Section */}
+        <View style={styles.imageSection}>
+          <Image 
+            source={require('../assets/images/icon.png')} 
+            style={styles.mainImage}
+            resizeMode="contain"
+          />
         </View>
 
-        {/* Achievements Grid */}
-        <View style={styles.achievementsContainer}>
-          {achievements.map((item, index) => (
-            <View key={index} style={styles.achievementCard}>
-              <Text style={styles.achievementNumber}>{item.number}</Text>
-              <Text style={styles.achievementLabel}>{item.label}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Features */}
-        <View style={styles.featuresSection}>
-          <Text style={styles.sectionTitle}>What We Offer</Text>
-          {features.map((feature, index) => (
-            <TouchableOpacity key={index} style={styles.featureCard}>
-              <View style={[styles.featureIcon, { backgroundColor: `${feature.color}15` }]}>
-                <MaterialIcons name={feature.icon} size={24} color={feature.color} />
-              </View>
-              <View style={styles.featureContent}>
-                <Text style={styles.featureTitle}>{feature.title}</Text>
-                <Text style={styles.featureDescription}>{feature.description}</Text>
-              </View>
-              <MaterialIcons name="arrow-forward-ios" size={16} color="#666" />
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Our Story Timeline */}
-        <View style={styles.storySection}>
-          <Text style={styles.sectionTitle}>Our Journey</Text>
-          <View style={styles.timeline}>
-            {story.map((item, index) => (
-              <View key={index} style={styles.timelineItem}>
-                <View style={styles.timelineDot} />
-                <View style={styles.timelineContent}>
-                  <Text style={styles.timelineYear}>{item.year}</Text>
-                  <Text style={styles.timelineEvent}>{item.event}</Text>
-                  <Text style={styles.timelineDescription}>{item.description}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        </View>
+       
 
         {/* Contact Section */}
         <View style={styles.contactSection}>
@@ -161,7 +122,7 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
-    paddingTop: 60,
+    paddingTop: 20,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
@@ -180,6 +141,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     color: '#1A1A1A',
+    alignSelf: 'center',
   },
   headerSubtitle: {
     fontSize: 14,
@@ -318,7 +280,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   contactSection: {
-    padding: 24,
+    padding: 70,
     alignItems: 'center',
   },
   contactButton: {
@@ -374,6 +336,20 @@ const styles = StyleSheet.create({
     height: 24,
     marginTop: 2,
     tintColor: '#16A34A'
+  },
+  imageSection: {
+    width: 200,
+    height: 200, // Increased height for a larger image
+    marginBottom: 20,
+    marginTop: 30,
+    alignSelf: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  mainImage: {
+    width: '100%',
+    height: '100%',
   },
 });
 

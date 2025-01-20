@@ -116,7 +116,7 @@ const HelpSupport = () => {
       {/* Circular Floating Chat Button */}
       <TouchableOpacity 
         style={styles.chatButton}
-        onPress={() => router.push('/chat')}
+        onPress={() => router.push('/')}
       >
         <View style={styles.chatButtonContent}>
           <MaterialIcons name="support-agent" size={28} color="#FFFFFF" />
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 20,
-    paddingTop: 60,
+    paddingTop:20,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
@@ -152,6 +152,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     color: '#1A1A1A',
+    textAlign: 'center',
     marginLeft: 70,
   },
   content: {

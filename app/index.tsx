@@ -28,9 +28,22 @@ export default function Login() {
 
   // Check for existing session
   useEffect(() => {
-    if (globalThis.userData) {
-      router.push('/home');
-    }
+    const checkSession = async () => {
+      try {
+        const userData = await AsyncStorage.getItem('userData');
+        if (userData) {
+          globalThis.userData = JSON.parse(userData);
+          // Use setTimeout to ensure navigation happens after mount
+          setTimeout(() => {
+            router.replace('/home');
+          }, 0);
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
+      }
+    };
+
+    checkSession();
   }, []);
 
   // Handle login
@@ -70,7 +83,7 @@ export default function Login() {
         const userData = await userResponse.json();
         await AsyncStorage.setItem('userData', JSON.stringify(userData));
         globalThis.userData = userData;
-        setShowOTPModal(true); // Show OTP modal instead of navigation
+        setShowOTPModal(true);
       } else {
         Alert.alert('Error', 'Failed to get user data');
       }
@@ -78,6 +91,15 @@ export default function Login() {
       console.error('Login error:', error);
       Alert.alert('Error', 'Connection failed');
     }
+  };
+
+  // Update the OTP verification handler
+  const handleOTPVerification = (code: string) => {
+    setShowOTPModal(false);
+    // Use setTimeout to ensure navigation happens after state update
+    setTimeout(() => {
+      router.replace('/home');
+    }, 0);
   };
 
   // Render input field
@@ -134,7 +156,7 @@ export default function Login() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <LinearGradient colors={['#FFF5F1', '#FFFFFF']} style={styles.container}>
+      <View style={styles.container}>
         <Stack.Screen options={{ headerShown: false }} />
         
         <View style={styles.content}>
@@ -151,7 +173,6 @@ export default function Login() {
                   resizeMode="contain"
                 />
               </LinearGradient>
-              
             </View>
 
             {/* Form */}
@@ -201,13 +222,9 @@ export default function Login() {
           visible={showOTPModal}
           onClose={() => setShowOTPModal(false)}
           email={credentials.email}
-          onVerify={(code) => {
-            // Handle OTP verification
-            setShowOTPModal(false);
-            router.replace('/home');
-          }}
+          onVerify={handleOTPVerification}
         />
-      </LinearGradient>
+      </View>
     </TouchableWithoutFeedback>
   );
 }
@@ -215,27 +232,29 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
   },
   content: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    backgroundColor: '#FFFFFF',
   },
   card: {
     //background:'#FFFFFF',
-    borderRadius: 24,
+    //borderRadius: 24,
     padding: 32,
     width: '100%',
     maxWidth: 420,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 5,
+    //shadowColor: '#000',
+    //shadowOffset: {
+    //  width: 0,
+    //  height: 10,
+    //},
+    //shadowOpacity: 0.1,
+    //shadowRadius: 20,
+    //elevation: 5,
   },
   logoSection: {
     alignItems: 'center',

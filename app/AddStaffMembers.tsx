@@ -18,10 +18,10 @@ const AddStaffMembers = () => {
           onPress={() => router.back()} // Navigate back
           style={styles.backButton}
         >
-          <Ionicons name="arrow-back" size={24} color={Color.otherOrange} />
+          <Ionicons name="arrow-back" size={24} color={'#374151'} />
         </TouchableOpacity>
         <View style={styles.header}>
-          <MaterialIcons name="person-add" size={24} color={Color.otherOrange} />
+          <MaterialIcons name="person-add" size={24} color={'#374151'} />
           <Text style={styles.headerText}>New Staff Member</Text>
         </View>
       </View>
@@ -41,9 +41,10 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 30,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    padding: 20,
+    paddingTop: 20,
+    //borderBottomWidth: 1,
+    //borderBottomColor: '#eee',
   },
   backButton: {
     marginRight: 10,
@@ -57,7 +58,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '600',
     marginLeft: 12,
-    color: Color.otherOrange,
+    color: '#374151',
   },
 });
 

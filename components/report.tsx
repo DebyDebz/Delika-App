@@ -9,7 +9,8 @@ import {
   ActivityIndicator,
   Dimensions,
   TouchableOpacity,
-  Alert
+  Alert,
+  Modal
 } from 'react-native';
 import { Color } from '../constants/GlobalStyles';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -18,6 +19,8 @@ import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as Print from 'expo-print';
 import ViewShot, { ViewShotProperties } from "react-native-view-shot";
+import { Calendar } from 'react-native-calendars';
+import { DateData } from 'react-native-calendars';
 
 interface OrderType {
   id: string;
@@ -460,21 +463,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   downloadTextContainer: {
-    gap: 4,
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    justifyContent: 'center',
   },
-  downloadLabel: {
-    fontSize: 14,
+  downloadText: {
+    color: '#1A1A1A',
+    fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
+    marginBottom: 2,
+  },
+  downloadSubtext: {
+    color: '#666666',
+    fontSize: 13,
   },
   downloadSubContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-  },
-  downloadSubtext: {
-    fontSize: 12,
-    color: '#6B7280',
   },
   divider: {
     width: 1,
@@ -485,6 +490,36 @@ const styles = StyleSheet.create({
     padding: 12,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  calendarContainer: {
+    width: '90%',
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  calendarHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  calendarTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  calendar: {
+    borderRadius: 16,
+    padding: 12,
+    backgroundColor: '#FFFFFF',
   },
 });
 
@@ -662,53 +697,22 @@ export default function EnhancedReport({ initialRestaurantId, initialBranchId }:
   };
 
   const MonthPicker = () => {
-    const currentYear = new Date().getFullYear();
-    const years = [currentYear - 1, currentYear, currentYear + 1];
-    
-    const months = [
-      { label: 'January', value: '01' },
-      { label: 'February', value: '02' },
-      { label: 'March', value: '03' },
-      { label: 'April', value: '04' },
-      { label: 'May', value: '05' },
-      { label: 'June', value: '06' },
-      { label: 'July', value: '07' },
-      { label: 'August', value: '08' },
-      { label: 'September', value: '09' },
-      { label: 'October', value: '10' },
-      { label: 'November', value: '11' },
-      { label: 'December', value: '12' }
-    ];
+    const [showCalendar, setShowCalendar] = useState(false);
+    const [selected, setSelected] = useState(selectedMonth);
+
+    const markedDates = {
+      [selected]: {
+        selected: true,
+        selectedColor: Color.otherOrange,
+        selectedTextColor: '#FFFFFF'
+      }
+    };
 
     return (
       <View style={styles.monthSelector}>
         <TouchableOpacity 
           style={styles.monthButton}
-          onPress={() => {
-            Alert.alert(
-              "Select Year",
-              "",
-              [
-                ...years.map(year => ({
-                  text: year.toString(),
-                  onPress: () => {
-                    Alert.alert(
-                      "Select Month",
-                      "",
-                      [
-                        ...months.map(month => ({
-                          text: month.label,
-                          onPress: () => setSelectedMonth(`${year}-${month.value}`)
-                        })),
-                        { text: "Cancel", style: "cancel" }
-                      ]
-                    );
-                  }
-                })),
-                { text: "Cancel", style: "cancel" }
-              ]
-            );
-          }}
+          onPress={() => setShowCalendar(true)}
         >
           <View style={styles.monthButtonContent}>
             <View style={styles.calendarIconContainer}>
@@ -725,6 +729,61 @@ export default function EnhancedReport({ initialRestaurantId, initialBranchId }:
             <MaterialIcons name="keyboard-arrow-down" size={24} color={Color.otherOrange} />
           </View>
         </TouchableOpacity>
+
+        <Modal
+          visible={showCalendar}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowCalendar(false)}
+        >
+          <TouchableOpacity 
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowCalendar(false)}
+          >
+            <View style={styles.calendarContainer}>
+              <View style={styles.calendarHeader}>
+                <Text style={styles.calendarTitle}>Select Date</Text>
+                <TouchableOpacity onPress={() => setShowCalendar(false)}>
+                  <MaterialIcons name="close" size={24} color="#666666" />
+                </TouchableOpacity>
+              </View>
+              
+              <Calendar
+                style={styles.calendar}
+                theme={{
+                  backgroundColor: '#ffffff',
+                  calendarBackground: '#ffffff',
+                  textSectionTitleColor: '#1F2937',
+                  selectedDayBackgroundColor: Color.otherOrange,
+                  selectedDayTextColor: '#ffffff',
+                  todayTextColor: Color.otherOrange,
+                  dayTextColor: '#2d4150',
+                  textDisabledColor: '#d9e1e8',
+                  dotColor: Color.otherOrange,
+                  selectedDotColor: '#ffffff',
+                  arrowColor: Color.otherOrange,
+                  monthTextColor: '#1F2937',
+                  textDayFontWeight: '400',
+                  textMonthFontWeight: '700',
+                  textDayHeaderFontWeight: '600',
+                  textDayFontSize: 16,
+                  textMonthFontSize: 18,
+                  textDayHeaderFontSize: 14
+                }}
+                markedDates={markedDates}
+                onDayPress={(day: DateData) => {
+                  const newDate = `${day.year}-${String(day.month).padStart(2, '0')}`;
+                  setSelected(newDate);
+                  setSelectedMonth(newDate);
+                  setShowCalendar(false);
+                }}
+                enableSwipeMonths={true}
+                current={selected}
+              />
+            </View>
+          </TouchableOpacity>
+        </Modal>
       </View>
     );
   };
@@ -979,10 +1038,9 @@ export default function EnhancedReport({ initialRestaurantId, initialBranchId }:
               <MaterialIcons name="analytics" size={20} color="#FFF" />
             </View>
             <View style={styles.downloadTextContainer}>
-             
+              <Text style={styles.downloadText}>Export</Text>
               <View style={styles.downloadSubContainer}>
-                
-                <Text style={styles.downloadSubtext}>Export PDF</Text>
+                <Text style={styles.downloadSubtext}>PDF</Text>
               </View>
             </View>
           </View>

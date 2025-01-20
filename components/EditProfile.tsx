@@ -165,6 +165,10 @@ export default function EditProfile() {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.contentContainer}
     >
+      <View style={styles.titleContainer}>
+        <Text style={styles.pageTitle}>Edit Profile</Text>
+      </View>
+
       <View style={styles.imageContainer}>
         <View style={styles.imageWithIconContainer}>
           <TouchableOpacity onPress={pickImage} style={styles.imageWrapper}>
@@ -352,5 +356,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666666',
     paddingHorizontal: 12,
+  },
+  titleContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingTop: 10
+  },
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#1A1A1A',
+    textAlign: 'center'
   },
 });
