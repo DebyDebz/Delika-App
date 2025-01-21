@@ -10,16 +10,6 @@ export default function AllOrdersDetails() {
 
   return (
     <View style={styles.mainContainer}>
-      <View style={styles.header}>
-        <TouchableOpacity 
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color="#374151" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Order Details</Text>
-      </View>
-
       <ScrollView style={styles.container}>
         <View style={styles.card}>
           <Text style={styles.sectionHeader}>Order Details</Text>
@@ -110,7 +100,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: 10,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
@@ -128,12 +118,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
-    padding: 16,
+    padding: 10,
   },
   card: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 16,
+    padding: 10,
     marginBottom: 16,
     elevation: 2,
     shadowColor: '#000',
@@ -142,7 +132,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   sectionHeader: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 16,
     color: '#000',

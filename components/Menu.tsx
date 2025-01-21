@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     width: '100%',
     height: '100%',
-    paddingTop: 30,
+    paddingTop: 10,
   },
   profileSection: {
     alignItems: 'center',
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     marginHorizontal: 16,
-    marginBottom: 32,
+    marginBottom: 10,
     borderTopWidth: 1,
     borderTopColor: '#F0F0F0',
   },

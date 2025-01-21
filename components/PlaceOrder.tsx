@@ -111,20 +111,20 @@ export default function PlaceOrder() {
                     quantity: item.quantity.toString()
                 })),
                 pickup: {
-                    address: pickupLocation.address,
-                    longitude: pickupLocation.longitude,
-                    latitude: pickupLocation.latitude,
-                    name: globalThis.userData?._restaurantTable[0].restaurantName,
-                    phone: globalThis.userData?.restaurantPhoneNumber,
-                    city: "Accra" // Or extract from address
+                    fromAddress: pickupLocation.address,
+                    fromLongitude: pickupLocation.longitude,
+                    fromLatitude: pickupLocation.latitude,
+                    //fromName: globalThis.userData?._restaurantTable[0].restaurantName,
+                    //fromPhone: globalThis.userData?.restaurantPhoneNumber,
+                    //fromCity: "Accra" // Or extract from address
                 },
                 dropOff: {
-                    address: deliveryLocation,
-                    longitude: dropoffLocation?.longitude || 0,
-                    latitude: dropoffLocation?.latitude || 0,
-                    name: customerName,
-                    phone: customerPhone,
-                    city: "Accra" // Or extract from address
+                    toAddress: deliveryLocation,
+                    toLongitude: dropoffLocation?.longitude || 0,
+                    toLatitude: dropoffLocation?.latitude || 0,
+                   // toName: customerName,
+                    //toPhone: customerPhone,
+                    //toCity: "Accra" // Or extract from address
                 },
                 customerName,
                 customerPhoneNumber: customerPhone,
@@ -135,7 +135,7 @@ export default function PlaceOrder() {
                 orderPrice: subtotal.toString(),
                 totalPrice: total.toString(),
                 pickupName: restaurantLocation,
-                dropoffName: customerName,
+                dropoffName: deliveryLocation,
                 foodAndDeliveryFee: true,
                 onlyDeliveryFee: false,
                 payNow: requestPayment,

@@ -582,7 +582,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     marginTop: 5,
-    marginBottom: 20,
+    marginBottom: 60,
     shadowColor: Color.otherOrange,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,

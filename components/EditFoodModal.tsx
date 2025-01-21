@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     minHeight: '65%',
-    paddingBottom: 24,
+    paddingBottom: 10,
   },
   header: {
     alignItems: 'center',
