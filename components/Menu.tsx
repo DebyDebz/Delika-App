@@ -189,12 +189,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     width: '100%',
     height: '100%',
-    paddingTop: 60,
+    paddingTop: 30,
   },
   profileSection: {
     alignItems: 'center',
     paddingVertical: 24,
-    marginBottom: 24,
+    marginBottom: 5,
   },
   logoContainer: {
     width: 80,
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     //backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 5,
     //shadowColor: '#000',
     //shadowOffset: { width: 0, height: 2 },
     //shadowOpacity: 0.1,
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
-    marginBottom: 8,
+    marginBottom: 5,
     borderRadius: 12,
   },
   activeItem: {

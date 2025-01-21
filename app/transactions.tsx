@@ -28,15 +28,6 @@ export default function TransactionsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <MaterialIcons name="arrow-back" size={24} color="#2D3436" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Transactions</Text>
-      </View>
       <Payment />
     </View>
   );

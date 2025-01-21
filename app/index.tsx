@@ -10,13 +10,15 @@ import {
   Image,
   Alert 
 } from 'react-native';
-import { Stack, router } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ForgetPassword from '../components/ForgetPassword';
 import LoginOTP from '../components/LoginOTP';
+
 export default function Login() {
+  const router = useRouter();
   // State management
   const [credentials, setCredentials] = useState({
     email: '',
@@ -28,22 +30,9 @@ export default function Login() {
 
   // Check for existing session
   useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const userData = await AsyncStorage.getItem('userData');
-        if (userData) {
-          globalThis.userData = JSON.parse(userData);
-          // Use setTimeout to ensure navigation happens after mount
-          setTimeout(() => {
-            router.replace('/home');
-          }, 0);
-        }
-      } catch (error) {
-        console.error('Error checking session:', error);
-      }
-    };
-
-    checkSession();
+    if (globalThis.userData) {
+      router.replace("/home");
+    }
   }, []);
 
   // Handle login
@@ -83,7 +72,7 @@ export default function Login() {
         const userData = await userResponse.json();
         await AsyncStorage.setItem('userData', JSON.stringify(userData));
         globalThis.userData = userData;
-        setShowOTPModal(true);
+        setShowOTPModal(true); // Show OTP modal instead of navigation
       } else {
         Alert.alert('Error', 'Failed to get user data');
       }
@@ -91,15 +80,6 @@ export default function Login() {
       console.error('Login error:', error);
       Alert.alert('Error', 'Connection failed');
     }
-  };
-
-  // Update the OTP verification handler
-  const handleOTPVerification = (code: string) => {
-    setShowOTPModal(false);
-    // Use setTimeout to ensure navigation happens after state update
-    setTimeout(() => {
-      router.replace('/home');
-    }, 0);
   };
 
   // Render input field
@@ -156,7 +136,7 @@ export default function Login() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={styles.container}>
+      <LinearGradient colors={['#FFF5F1', '#FFFFFF']} style={styles.container}>
         <Stack.Screen options={{ headerShown: false }} />
         
         <View style={styles.content}>
@@ -173,6 +153,7 @@ export default function Login() {
                   resizeMode="contain"
                 />
               </LinearGradient>
+              
             </View>
 
             {/* Form */}
@@ -222,9 +203,13 @@ export default function Login() {
           visible={showOTPModal}
           onClose={() => setShowOTPModal(false)}
           email={credentials.email}
-          onVerify={handleOTPVerification}
+          onVerify={(code) => {
+            // Handle OTP verification
+            setShowOTPModal(false);
+            router.replace('/home');
+          }}
         />
-      </View>
+      </LinearGradient>
     </TouchableWithoutFeedback>
   );
 }
@@ -232,34 +217,23 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   content: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#FFFFFF',
   },
   card: {
-    //background:'#FFFFFF',
-    //borderRadius: 24,
     padding: 32,
     width: '100%',
     maxWidth: 420,
-    //shadowColor: '#000',
-    //shadowOffset: {
-    //  width: 0,
-    //  height: 10,
-    //},
-    //shadowOpacity: 0.1,
-    //shadowRadius: 20,
-    //elevation: 5,
+    
   },
   logoSection: {
     alignItems: 'center',
-    marginBottom: 5,
-    marginTop: -30,
+    marginBottom: -20,
+    marginTop: -20,
   },
   logoBg: {
     width: 90,
@@ -286,7 +260,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     color: '#1E293B',
-    marginBottom: 8,
+    marginBottom: 5,
   },
   subtitleText: {
     fontSize: 15,
@@ -413,4 +387,4 @@ const styles = StyleSheet.create({
     marginTop: 2,
     tintColor: '#16A34A'
   },
-});
+})

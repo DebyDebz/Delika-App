@@ -165,10 +165,6 @@ export default function EditProfile() {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.contentContainer}
     >
-      <View style={styles.titleContainer}>
-        <Text style={styles.pageTitle}>Edit Profile</Text>
-      </View>
-
       <View style={styles.imageContainer}>
         <View style={styles.imageWithIconContainer}>
           <TouchableOpacity onPress={pickImage} style={styles.imageWrapper}>

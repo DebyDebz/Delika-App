@@ -13,18 +13,6 @@ const AddStaffMembers = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity 
-          onPress={() => router.back()} // Navigate back
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color={'#374151'} />
-        </TouchableOpacity>
-        <View style={styles.header}>
-          <MaterialIcons name="person-add" size={24} color={'#374151'} />
-          <Text style={styles.headerText}>New Staff Member</Text>
-        </View>
-      </View>
       <AddStaff 
         visible={modalVisible} // Pass the modal visibility state
         onClose={() => setModalVisible(false)} // Close the modal

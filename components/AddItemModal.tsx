@@ -93,7 +93,7 @@ export default function AddItemModal({ visible, onClose, onAdd, categories, onAd
 
       const foods = {
         name: name.trim(),
-        price: price.trim(),
+        price: Number(price.trim()),
         description: description.trim(),
         quantity: String(parseInt(quantity) || 0),
         restaurantId: globalThis.userData.restaurantId,
@@ -121,10 +121,12 @@ export default function AddItemModal({ visible, onClose, onAdd, categories, onAd
       const newFood: Food = {
         id: String(Date.now()),
         name: name.trim(),
-        price: price.trim(),
+        price: Number(price.trim()),
         description: description.trim(),
         quantity: parseInt(quantity) || 0,
-        foodImage: { url: imageUri }
+        foodImage: { url: imageUri },
+        newPrice: Number(price.trim()),
+        newQuantity: parseInt(quantity) || 0
       };
 
       resetForm();
@@ -472,7 +474,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     maxHeight: '88%',
-    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+    paddingBottom:24,
   },
   header: {
     alignItems: 'center',
@@ -580,7 +582,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     marginTop: 5,
-    marginBottom: 16,
+    marginBottom: 20,
     shadowColor: Color.otherOrange,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,

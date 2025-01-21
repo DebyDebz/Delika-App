@@ -1,41 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { Stack } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Color } from '../constants/GlobalStyles';
 
 export default function PrivacyScreen() {
-  const router = useRouter();
-
   return (
     <View style={styles.container}>
       <Stack.Screen 
         options={{
-          headerShown: true,
-          title: 'Privacy Policy',
-          headerBackVisible: false,
-          headerTitleAlign: 'center',
-          headerLeft: () => (
-            <TouchableOpacity 
-              style={styles.backButton}
-              onPress={() => {
-                console.log('Back pressed from privacy');
-                router.back();
-              }}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
-            </TouchableOpacity>
-          ),
-          headerStyle: {
-            backgroundColor: '#FFFFFF',
-          },
-          headerTitleStyle: {
-            color: '#1A1A1A',
-            fontSize: 18,
-            fontWeight: '600',
-          },
-          headerShadowVisible: false,
+          headerShown: false,
         }}
       />
       
@@ -100,10 +74,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F9FA',
-  },
-  backButton: {
-    marginLeft: 16,
-    padding: 8,
   },
   content: {
     flex: 1,

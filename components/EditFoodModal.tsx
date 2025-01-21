@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     minHeight: '65%',
-    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+    paddingBottom: 24,
   },
   header: {
     alignItems: 'center',
@@ -377,7 +377,8 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     alignItems: 'center',
-    marginTop: 24,
+    marginTop: 10,
+    marginBottom: 10,
     shadowColor: Color.otherOrange,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,

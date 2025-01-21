@@ -100,15 +100,6 @@ export default function ProfileScreen() {
       
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <MaterialIcons name="arrow-back" size={28} color={'#2D3436'} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Profile</Text>
-          <View style={styles.spacer} />
-        </View>
-
-        {/* Profile Info */}
         <View style={styles.profileInfo}>
           <Image
             source={userData.image?.url ? { uri: userData.image.url } : require('../assets/images/logo.png')}
