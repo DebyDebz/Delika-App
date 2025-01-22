@@ -138,7 +138,7 @@ export default function OTP({ visible, onClose, onVerify, phoneNumber, email }: 
 
   const handleButtonPress = () => {
     if (timer === 0) {
-      setTimer(60);
+      setTimer(180);
     } else {
       handleVerify();
     }

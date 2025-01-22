@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingTop:  40,
     paddingHorizontal: 20,
     paddingBottom: 20,
     backgroundColor: '#FFFFFF',
@@ -112,7 +112,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     //backgroundColor: '#F5F5F5',
     justifyContent: 'center',
-    alignItems: 'center',
+
+    
   },
   headerTitle: {
     flex: 1,
@@ -121,6 +122,7 @@ const styles = StyleSheet.create({
     color: '#1A1A1A',
     textAlign: 'center',
     marginRight: 40,
+    alignSelf: 'center',
   },
   content: {
     flex: 1,

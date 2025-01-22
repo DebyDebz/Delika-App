@@ -19,7 +19,7 @@ export default function ProfileEditScreen() {
               style={styles.backButton}
               onPress={() => {
                 console.log('Back pressed from profile edit');
-                router.navigate('/settings');
+                router.back();
               }}
             >
               <Ionicons name="arrow-back" size={24} color="#1A1A1A" />

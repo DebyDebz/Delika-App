@@ -187,9 +187,10 @@ const { width } = Dimensions.get('window');
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#FFFFFF',
-    width: '100%',
+    width: '90%',
     height: '100%',
     paddingTop: 10,
+    
   },
   profileSection: {
     alignItems: 'center',

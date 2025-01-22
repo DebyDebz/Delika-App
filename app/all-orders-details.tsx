@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { Stack } from 'expo-router';
 
 export default function AllOrdersDetails() {
   const router = useRouter();
@@ -10,7 +11,28 @@ export default function AllOrdersDetails() {
 
   return (
     <View style={styles.mainContainer}>
-      <ScrollView style={styles.container}>
+      <Stack.Screen 
+        options={{
+          headerShown: true,
+          title: `Viewing Order ${params.orderNumber}`,
+          headerTitleAlign: 'center',
+          headerStyle: {
+            backgroundColor: '#FFFFFF',
+          },
+          headerTitleStyle: {
+            color: '#1A1A1A',
+            fontSize: 18,
+            fontWeight: '600',
+          },
+          headerShadowVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
           <Text style={styles.sectionHeader}>Order Details</Text>
           <View style={styles.row}>
@@ -33,7 +55,7 @@ export default function AllOrdersDetails() {
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Payment Status:</Text>
-            <Text style={styles.value}>{params.paymentStatus}</Text>
+            <Text style={[styles.value, styles.highlightedValue]}>{params.paymentStatus}</Text>
           </View>
         </View>
 
@@ -49,7 +71,7 @@ export default function AllOrdersDetails() {
           </View>
           <View style={[styles.row, styles.total]}>
             <Text style={styles.label}>Total:</Text>
-            <Text style={styles.totalValue}>GH₵{params.totalPrice}</Text>
+            <Text style={[styles.totalValue, styles.highlightedValue]}>GH₵{params.totalPrice}</Text>
           </View>
         </View>
 
@@ -97,23 +119,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+  scrollContent: {
+    paddingBottom: 20, // Add padding to ensure content is scrollable
   },
   backButton: {
     padding: 8,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#374151',
-    marginLeft: 16,
-    
   },
   container: {
     flex: 1,
@@ -151,8 +161,11 @@ const styles = StyleSheet.create({
   },
   value: {
     fontSize: 16,
-    color: '#000',
+    color: '#666',
     fontWeight: '500',
+  },
+  highlightedValue: {
+    color: '#FE5B18', // Highlighted color for total price and payment status
   },
   total: {
     marginTop: 8,
@@ -192,6 +205,6 @@ const styles = StyleSheet.create({
   productPrice: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    color: '#FE5B18',
   },
 });

@@ -255,6 +255,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     justifyContent: 'flex-end',
+    paddingTop: 100,
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
@@ -265,7 +266,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     minHeight: '65%',
-    paddingBottom: 10,
+    paddingBottom: 20,
   },
   header: {
     alignItems: 'center',
@@ -377,8 +378,8 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 10,
+    marginTop: -10,
+    marginBottom: 30,
     shadowColor: Color.otherOrange,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,

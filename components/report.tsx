@@ -1017,211 +1017,213 @@ export default function EnhancedReport({ initialRestaurantId, initialBranchId }:
   }
 
   return (
-    <ScrollView 
-      style={styles.container}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          colors={[Color.otherOrange]}
-        />
-      }
-    >
-      <View style={styles.headerContainer}>
-        <MonthPicker />
-        <TouchableOpacity 
-          style={styles.downloadButton}
-          onPress={downloadReport}
-        >
-          <View style={styles.downloadContent}>
-            <View style={styles.downloadIconContainer}>
-              <MaterialIcons name="analytics" size={20} color="#FFF" />
-            </View>
-            <View style={styles.downloadTextContainer}>
-              <Text style={styles.downloadText}>Export</Text>
-              <View style={styles.downloadSubContainer}>
-                <Text style={styles.downloadSubtext}>PDF</Text>
+    <View style={styles.container}>
+      <ScrollView
+        style={styles.container}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Color.otherOrange]}
+          />
+        }
+      >
+        <View style={styles.headerContainer}>
+          <MonthPicker />
+          <TouchableOpacity 
+            style={styles.downloadButton}
+            onPress={downloadReport}
+          >
+            <View style={styles.downloadContent}>
+              <View style={styles.downloadIconContainer}>
+                <MaterialIcons name="analytics" size={20} color="#FFF" />
+              </View>
+              <View style={styles.downloadTextContainer}>
+                
+                <View style={styles.downloadSubContainer}>
+                  
+                </View>
               </View>
             </View>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.downloadAction}>
-            <MaterialIcons name="download" size={20} color={Color.otherOrange} />
-          </View>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.metricsContainer}>
-        <View style={styles.metricRow}>
-          <View style={styles.metricCard}>
-            <View style={styles.metricHeader}>
-              <View style={styles.metricIconContainer}>
-                <MaterialIcons name="payments" size={20} color="#FFF" />
-              </View>
-              <Text style={styles.metricTrend}>+15%</Text>
+            <View style={styles.divider} />
+            <View style={styles.downloadAction}>
+              <MaterialIcons name="download" size={20} color={Color.otherOrange} />
             </View>
-            <Text style={styles.metricValue}>
-              GH₵ {metrics.totalPrice.toLocaleString('en-GH', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-              })}
-            </Text>
-            <Text style={styles.metricLabel}>Total Revenue</Text>
-          </View>
-
-          <View style={styles.metricCard}>
-            <View style={[styles.metricIconContainer, { backgroundColor: '#4CAF50' }]}>
-              <MaterialIcons name="shopping-basket" size={20} color="#FFF" />
-            </View>
-            <Text style={styles.metricValue}>
-              {metrics.totalProducts}
-            </Text>
-            <Text style={styles.metricLabel}>Total Orders</Text>
-          </View>
+          </TouchableOpacity>
         </View>
-
-        <View style={[styles.metricCard, styles.averageCard]}>
-          <View style={styles.metricHeader}>
-            <View style={[styles.metricIconContainer, { backgroundColor: '#2196F3' }]}>
-              <MaterialIcons name="trending-up" size={20} color="#FFF" />
-            </View>
-            <Text style={[styles.metricTrend, { color: '#2196F3' }]}>+12%</Text>
-          </View>
-          <View style={styles.averageContent}>
-            <View>
+        <View style={styles.metricsContainer}>
+          <View style={styles.metricRow}>
+            <View style={styles.metricCard}>
+              <View style={styles.metricHeader}>
+                <View style={styles.metricIconContainer}>
+                  <MaterialIcons name="payments" size={20} color="#FFF" />
+                </View>
+                <Text style={styles.metricTrend}>+15%</Text>
+              </View>
               <Text style={styles.metricValue}>
-                GH₵ {metrics.averageOrderValue.toFixed(2)}
+                GH₵ {metrics.totalPrice.toLocaleString('en-GH', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
+                })}
               </Text>
-              <Text style={styles.metricLabel}>Average Order Value</Text>
+              <Text style={styles.metricLabel}>Total Revenue</Text>
             </View>
-            <View style={styles.averageChart}>
-              <View style={styles.chartBar} />
-              <View style={[styles.chartBar, { height: '60%' }]} />
-              <View style={[styles.chartBar, { height: '80%' }]} />
-              <View style={[styles.chartBar, { height: '70%' }]} />
-              <View style={[styles.chartBar, { height: '90%' }]} />
-            </View>
-          </View>
-        </View>
-      </View>
 
-      <View style={styles.paymentOverview}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Payment Overview</Text>
-        </View>
-
-        <View style={styles.chartsContainer}>
-          <View style={styles.chartCard}>
-            <Text style={styles.chartCardTitle}>
-              {new Date(selectedMonth).toLocaleString('default', { month: 'long', year: 'numeric' })}
-            </Text>
-            <ViewShot ref={chartRef} options={{ format: "png", quality: 1 }}>
-              <LineChart
-                data={getMonthlyPaymentData()}
-                width={Dimensions.get('window').width - 64}
-                height={220}
-                yAxisLabel="GH₵ "
-                yAxisSuffix=""
-                yAxisInterval={1}
-                chartConfig={{
-                  backgroundColor: '#FFF',
-                  backgroundGradientFrom: '#FFF',
-                  backgroundGradientTo: '#FFF',
-                  decimalPlaces: 0,
-                  color: (opacity = 1) => `rgba(255, 122, 0, ${opacity})`,
-                  labelColor: (opacity = 1) => `rgba(102, 102, 102, ${opacity})`,
-                  style: { borderRadius: 16 },
-                  strokeWidth: 2,
-                  propsForDots: {
-                    r: "4",
-                    strokeWidth: "2",
-                    stroke: Color.otherOrange
-                  },
-                  propsForBackgroundLines: {
-                    strokeDasharray: "",
-                    stroke: "#E5E7EB",
-                    strokeWidth: 0.5
-                  },
-                  formatYLabel: (value) => 
-                    Number(value).toLocaleString('en-GH', { 
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0
-                    })
-                }}
-                bezier
-                style={{
-                  marginVertical: 8,
-                  borderRadius: 16
-                }}
-              />
-            </ViewShot>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Orders for {new Date(selectedMonth).toLocaleString('default', { month: 'long', year: 'numeric' })}</Text>
-        <Text style={styles.headerOrderCount}>{filteredOrders.length} orders</Text>
-      </View>
-
-      {filteredOrders.map((order) => (
-        <View key={order.id} style={styles.orderCard}>
-          <View style={styles.orderHeader}>
-            <Text style={styles.orderNumber}>#{order.orderNumber}</Text>
-            <Text style={styles.orderDate}>{order.orderDate}</Text>
-          </View>
-
-          <View style={styles.customerInfo}>
-            <Text style={styles.customerName}>{order.customerName}</Text>
-          </View>
-
-          <View style={styles.orderDetails}>
-            <View>
-              <Text style={styles.priceLabel}>Total Amount</Text>
-              <Text style={styles.priceValue}>
-                GH₵ {Number(order.totalPrice).toFixed(2)}
+            <View style={styles.metricCard}>
+              <View style={[styles.metricIconContainer, { backgroundColor: '#4CAF50' }]}>
+                <MaterialIcons name="shopping-basket" size={20} color="#FFF" />
+              </View>
+              <Text style={styles.metricValue}>
+                {metrics.totalProducts}
               </Text>
-            </View>
-
-            <View style={styles.statusContainer}>
-              <View style={[
-                styles.statusChip,
-                { backgroundColor: order.orderStatus === 'Delivered' ? '#E8F5E9' : '#FFF3E0' }
-              ]}>
-                <Text style={[
-                  styles.statusText,
-                  { color: order.orderStatus === 'Delivered' ? '#4CAF50' : '#FF9800' }
-                ]}>
-                  {order.orderStatus}
-                </Text>
-              </View>
-              <View style={[
-                styles.statusChip,
-                { backgroundColor: order.paymentStatus === 'Paid' ? '#E8F5E9' : '#FFEBEE' }
-              ]}>
-                <Text style={[
-                  styles.statusText,
-                  { color: order.paymentStatus === 'Paid' ? '#4CAF50' : '#F44336' }
-                ]}>
-                  {order.paymentStatus}
-                </Text>
-              </View>
+              <Text style={styles.metricLabel}>Total Orders</Text>
             </View>
           </View>
 
-          <View style={styles.productsList}>
-            {order.products.map((product, index) => (
-              <View key={index} style={styles.productItem}>
-                <Text style={styles.productName}>
-                  {product.name} x{product.quantity}
-                </Text>
-                <Text style={styles.productPrice}>
-                  GH₵ {Number(product.price).toFixed(2)}
-                </Text>
+          <View style={[styles.metricCard, styles.averageCard]}>
+            <View style={styles.metricHeader}>
+              <View style={[styles.metricIconContainer, { backgroundColor: '#2196F3' }]}>
+                <MaterialIcons name="trending-up" size={20} color="#FFF" />
               </View>
-            ))}
+              <Text style={[styles.metricTrend, { color: '#2196F3' }]}>+12%</Text>
+            </View>
+            <View style={styles.averageContent}>
+              <View>
+                <Text style={styles.metricValue}>
+                  GH₵ {metrics.averageOrderValue.toFixed(2)}
+                </Text>
+                <Text style={styles.metricLabel}>Average Order Value</Text>
+              </View>
+              <View style={styles.averageChart}>
+                <View style={styles.chartBar} />
+                <View style={[styles.chartBar, { height: '60%' }]} />
+                <View style={[styles.chartBar, { height: '80%' }]} />
+                <View style={[styles.chartBar, { height: '70%' }]} />
+                <View style={[styles.chartBar, { height: '90%' }]} />
+              </View>
+            </View>
           </View>
         </View>
-      ))}
-    </ScrollView>
+
+        <View style={styles.paymentOverview}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Payment Overview</Text>
+          </View>
+
+          <View style={styles.chartsContainer}>
+            <View style={styles.chartCard}>
+              <Text style={styles.chartCardTitle}>
+                {new Date(selectedMonth).toLocaleString('default', { month: 'long', year: 'numeric' })}
+              </Text>
+              <ViewShot ref={chartRef} options={{ format: "png", quality: 1 }}>
+                <LineChart
+                  data={getMonthlyPaymentData()}
+                  width={Dimensions.get('window').width - 64}
+                  height={220}
+                  yAxisLabel="GH₵ "
+                  yAxisSuffix=""
+                  yAxisInterval={1}
+                  chartConfig={{
+                    backgroundColor: '#FFF',
+                    backgroundGradientFrom: '#FFF',
+                    backgroundGradientTo: '#FFF',
+                    decimalPlaces: 0,
+                    color: (opacity = 1) => `rgba(255, 122, 0, ${opacity})`,
+                    labelColor: (opacity = 1) => `rgba(102, 102, 102, ${opacity})`,
+                    style: { borderRadius: 16 },
+                    strokeWidth: 2,
+                    propsForDots: {
+                      r: "4",
+                      strokeWidth: "2",
+                      stroke: Color.otherOrange
+                    },
+                    propsForBackgroundLines: {
+                      strokeDasharray: "",
+                      stroke: "#E5E7EB",
+                      strokeWidth: 0.5
+                    },
+                    formatYLabel: (value) => 
+                      Number(value).toLocaleString('en-GH', { 
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                      })
+                  }}
+                  bezier
+                  style={{
+                    marginVertical: 8,
+                    borderRadius: 16
+                  }}
+                />
+              </ViewShot>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Orders for {new Date(selectedMonth).toLocaleString('default', { month: 'long', year: 'numeric' })}</Text>
+          <Text style={styles.headerOrderCount}>{filteredOrders.length} orders</Text>
+        </View>
+
+        {filteredOrders.map((order) => (
+          <View key={order.id} style={styles.orderCard}>
+            <View style={styles.orderHeader}>
+              <Text style={styles.orderNumber}>#{order.orderNumber}</Text>
+              <Text style={styles.orderDate}>{order.orderDate}</Text>
+            </View>
+
+            <View style={styles.customerInfo}>
+              <Text style={styles.customerName}>{order.customerName}</Text>
+            </View>
+
+            <View style={styles.orderDetails}>
+              <View>
+                <Text style={styles.priceLabel}>Total Amount</Text>
+                <Text style={styles.priceValue}>
+                  GH₵ {Number(order.totalPrice).toFixed(2)}
+                </Text>
+              </View>
+
+              <View style={styles.statusContainer}>
+                <View style={[
+                  styles.statusChip,
+                  { backgroundColor: order.orderStatus === 'Delivered' ? '#E8F5E9' : '#FFF3E0' }
+                ]}>
+                  <Text style={[
+                    styles.statusText,
+                    { color: order.orderStatus === 'Delivered' ? '#4CAF50' : '#FF9800' }
+                  ]}>
+                    {order.orderStatus}
+                  </Text>
+                </View>
+                <View style={[
+                  styles.statusChip,
+                  { backgroundColor: order.paymentStatus === 'Paid' ? '#E8F5E9' : '#FFEBEE' }
+                ]}>
+                  <Text style={[
+                    styles.statusText,
+                    { color: order.paymentStatus === 'Paid' ? '#4CAF50' : '#F44336' }
+                  ]}>
+                    {order.paymentStatus}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.productsList}>
+              {order.products.map((product, index) => (
+                <View key={index} style={styles.productItem}>
+                  <Text style={styles.productName}>
+                    {product.name} x{product.quantity}
+                  </Text>
+                  <Text style={styles.productPrice}>
+                    GH₵ {Number(product.price).toFixed(2)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        ))}
+      </ScrollView>
+    </View>
   );
 }

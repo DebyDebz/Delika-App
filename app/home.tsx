@@ -541,7 +541,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 10,
-    marginTop: -420,
+    marginTop: -380,
   },
   cardsContainer: {
     paddingVertical: 10,

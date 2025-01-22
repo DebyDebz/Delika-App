@@ -22,11 +22,12 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    padding: 16,
+    padding: 10,
     marginHorizontal: 10,
-    marginTop: -20,
+    marginTop:-15,
+    marginBottom: 20,
     width: 160,
-    height: 140,
+    height: 120,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
