@@ -1,97 +1,135 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import { Stack, router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { Color } from '../constants/GlobalStyles';
-import Payment from '../components/AllOrders';
-import NotificationIcon from '../components/NotificationIcon';
-import Menu from '../components/Menu';
-import { Calendar } from 'react-native-calendars';
-import AllOrders from '../components/AllOrders';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Platform,
+  TouchableOpacity,
+  Modal,
+  Image,
+  SafeAreaView,
+  Animated,
+} from 'react-native';
+import { Ionicons, Feather } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
-import { Animated } from 'react-native';
+import { Calendar, DateData } from 'react-native-calendars';
+import { Color } from '../constants/GlobalStyles';
+import AllOrders from '../components/AllOrders';
+import Menu from '../components/Menu';
+import BranchFilter from '../components/branchFilter';
+import NotificationIcon from '../components/NotificationIcon';
+import NotificationModal from '../components/NotificationModal';
+import { useSelectedBranch } from '../context/SelectedBranchContext';
+import Profile from './profile';
+import { Stack, router } from 'expo-router';
 
-interface CalendarDay {
-  timestamp: number;
-  dateString: string;
-  day: number;
-  month: number;
-  year: number;
+declare global {
+  var userData: any;
+  var dashboardData: any;
 }
 
-export default function Orders() {
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [showMenu, setShowMenu] = useState(false);
-  const [orders, setOrders] = useState<any[]>([]);
+const formatDate = (date: Date) => {
+  return date.toLocaleDateString('en-US', { 
+    month: 'long', 
+    day: 'numeric', 
+    year: 'numeric' 
+  });
+};
 
-  const formatDate = (date: Date) => {
-    return `Today, ${date.getDate()} ${date.toLocaleString('default', { month: 'long' })}`;
+export default function Home() {
+  const { selectedBranch } = useSelectedBranch();
+  const [showMenu, setShowMenu] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [showBranchFilter, setShowBranchFilter] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [userRole] = useState('Admin');
+  const [dashboardStats, setDashboardStats] = useState({
+    totalRevenue: 0,
+    totalOrders: 0,
+    totalMenu: 0
+  });
+  const [revenueData, setRevenueData] = useState(null);
+  const [showProfile, setShowProfile] = useState(false);
+  const [slideAnim] = useState(new Animated.Value(0));
+  const [orders, setOrders] = useState<any[]>([]);
+  
+  // Updated global data references
+  const restaurantName = globalThis.userData?._restaurantTable[0]?.restaurantName || 'Restaurant Name';
+  const location = globalThis.userData?.branchesTable?.branchLocation || 'Location Name';
+  const profileImage = globalThis.userData?.image?.url || require('../assets/images/logo.png');
+
+  const formatSelectedDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', { 
+      month: 'long', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
   };
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        if (!globalThis.userData?.restaurantId || !globalThis.userData?.branchId) return;
+  const fetchOrders = async (date: string, branchId?: string) => {
+    try {
+      const restaurantId = globalThis.userData?._restaurantTable[0]?.id;
+      let currentBranchId;
 
-        const formattedDate = selectedDate.toISOString().split('T')[0];
-        const url = `https://api-server.krontiva.africa/api:uEBBwbSs/filter/orders/by/date?restaurantId=${globalThis.userData.restaurantId}&branchId=${globalThis.userData.branchId}&date=${formattedDate}`;
-        
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        });
-
-        const data = await response.json();
-        setOrders(data);
-      } catch (error) {
-        console.error('Error fetching orders:', error);
+      if (globalThis.userData?.role === 'Admin') {
+        // For Admin, use the selected branch ID if provided
+        currentBranchId = branchId || globalThis.userData?.branchesTable?.id;
+      } else {
+        // For non-Admin, always use their assigned branch
+        currentBranchId = globalThis.userData?.branchesTable?.id;
       }
-    };
 
-    fetchOrders();
-  }, [selectedDate]);
+      const url = `https://api-server.krontiva.africa/api:uEBBwbSs/filter/orders/by/date?restaurantId=${restaurantId}&branchId=${currentBranchId}&date=${date}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      const data = await response.json();
+      setOrders(data);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    }
+  };
+
+  const handleDayPress = async (day: DateData) => {
+    const newDate = new Date(day.timestamp);
+    setSelectedDate(newDate);
+    setShowCalendar(false);
+
+    const formattedDate = newDate.toISOString().split('T')[0];
+    await fetchOrders(formattedDate);
+  };
+
+  const handleBranchSelect = async (branch: any) => {
+    setShowBranchFilter(false);
+    if (globalThis.userData?.role === 'Admin') {
+      const formattedDate = selectedDate.toISOString().split('T')[0];
+      await fetchOrders(formattedDate, branch.id);
+    }
+  };
+
+  // Initial fetch on component mount
+  useEffect(() => {
+    const formattedDate = selectedDate.toISOString().split('T')[0];
+    fetchOrders(formattedDate);
+  }, []);
 
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       
       <View style={styles.header}>
-        <View style={styles.profileSection}>
-          <View style={styles.textContainer}>
-            <Text style={styles.restaurantName}>
-              {globalThis.userData?._restaurantTable[0].restaurantName}
-            </Text>
-            <View style={styles.locationContainer}>
-              <Ionicons name="location" size={20} color="#666666" />
-              <Text style={styles.location}>
-                {globalThis.userData?.branchesTable.branchLocation}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.rightContainer}>
-            <NotificationIcon color={Color.otherOrange} />
-            <TouchableOpacity onPress={() => router.push('/profile')}>
-              {globalThis.userData?.image?.url && (
-                <Image 
-                  source={{ uri: globalThis.userData.image.url }} 
-                  style={styles.profileImage}
-                />
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.bottomSection}>
-          <View style={styles.dateContainer}>
-            <Text style={styles.dateText}>Choose Date</Text>
-            <TouchableOpacity onPress={() => setShowCalendar(true)} style={styles.calendarButton}>
-              <Ionicons name="calendar-outline" size={20} color="#CCCCCC" />
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity onPress={() => setShowMenu(!showMenu)} style={styles.menuButton}>
+        <View style={styles.topSection}>
+          <TouchableOpacity 
+            style={styles.menuButton}
+            onPress={() => setShowMenu(!showMenu)}
+          >
             <View style={styles.menuGrid}>
               <View style={styles.menuRow}>
                 <View style={styles.menuDot} />
@@ -103,15 +141,48 @@ export default function Orders() {
               </View>
             </View>
           </TouchableOpacity>
+
+          <View style={styles.rightContainer}>
+            <NotificationIcon color={Color.otherOrange} />
+            <TouchableOpacity 
+              onPress={() => router.push({
+                pathname: '/profile',
+                params: { userData: JSON.stringify(globalThis.userData) }
+              })}
+            >
+              <Image 
+                source={globalThis.userData?.image?.url 
+                  ? { uri: globalThis.userData.image.url } 
+                  : require('../assets/images/logo.png')} 
+                style={styles.profileImage}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.profileSection}>
+          <Text style={styles.restaurantName}>
+            {globalThis.userData?._restaurantTable[0].restaurantName}
+          </Text>
+          <View style={styles.locationContainer}>
+            <Feather name="map-pin" size={14} color={Color.otherOrange} />
+            <Text style={styles.location}>
+              {globalThis.userData?.branchesTable.branchLocation}
+            </Text>
+          </View>
         </View>
 
         <View style={styles.dateSection}>
-          <View style={styles.todayContainer}>
-            <View style={styles.checkmarkContainer}>
-              <Ionicons name="checkmark" size={16} color="#000000" />
-            </View>
-            <Text style={styles.todayText}>{formatDate(selectedDate)}</Text>
-          </View>
+          <TouchableOpacity 
+            style={styles.dateSelector}
+            onPress={() => setShowCalendar(true)}
+          >
+            <View style={styles.dateContent}>
+            <Feather name="calendar" size={20} color={Color.otherOrange} />
+          <Text style={styles.dateText}>{formatSelectedDate(selectedDate)}</Text>
+        </View>
+        <Feather name="chevron-down" size={20} color={Color.otherOrange} />
+      </TouchableOpacity>
         </View>
 
         <View style={styles.titleSection}>
@@ -126,18 +197,27 @@ export default function Orders() {
         </View>
       </View>
 
+      {showBranchFilter && (
+        <BranchFilter
+          visible={showBranchFilter}
+          onClose={() => setShowBranchFilter(false)}
+          onSelect={handleBranchSelect}
+        />
+      )}
+
       {showMenu && (
-        <TouchableOpacity 
-          style={styles.blurOverlay}
-          activeOpacity={1}
-          onPress={() => setShowMenu(false)}
-        >
-          <BlurView
-            intensity={20}
-            style={StyleSheet.absoluteFill}
-            tint="dark"
-          />
-        </TouchableOpacity>
+        <>
+          <TouchableOpacity 
+            style={styles.overlay}
+            activeOpacity={1}
+            onPress={() => setShowMenu(false)}
+          >
+            <BlurView intensity={10} style={StyleSheet.absoluteFill} />
+          </TouchableOpacity>
+          <View style={styles.menuContainer}>
+            <Menu onClose={() => setShowMenu(false)} />
+          </View>
+        </>
       )}
 
       {showMenu && (
@@ -154,9 +234,8 @@ export default function Orders() {
         >
           <View style={styles.calendarContainer} onStartShouldSetResponder={() => true}>
             <Calendar
-              onDayPress={(day: CalendarDay) => {
-                setSelectedDate(new Date(day.timestamp));
-                setShowCalendar(false);
+              onDayPress={(day: DateData) => {
+                handleDayPress(day);
               }}
               theme={{
                 backgroundColor: '#ffffff',
@@ -190,34 +269,37 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
-    paddingTop: 40,
-    backgroundColor: '#F',
+    paddingTop: 20,
+    backgroundColor: '#FFFFFF',
+  },
+  topSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
   },
   profileSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: -10,
-  },
-  profileImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 10,
+    marginBottom: 5,
   },
   textContainer: {
     flex: 1,
   },
+  greeting: {
+    fontSize: 16,
+    color: '#666666',
+    marginBottom: 4,
+    marginTop: 10,
+  },
   restaurantName: {
+    fontSize: 24,
+    fontWeight: '700',
     color: '#1A1A1A',
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 3,
+    marginBottom: 8,
   },
   locationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 4,
   },
   location: {
     color: '#666666',
@@ -226,36 +308,62 @@ const styles = StyleSheet.create({
   rightContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    marginTop: -5,
+    gap: 15,
   },
-  bottomSection: {
+  notificationContainer: {
+    marginTop: 15,
+    marginRight: -15,
+  },
+  profileImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 2,
+    borderColor: Color.otherOrange,
+  },
+  controlsSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 20,
-    paddingRight: 35,
+    marginTop: 16,
+    marginBottom: 16,
   },
-  dateContainer: {
+  dateSection: {
+    marginTop: 20,
+  },
+  dateSelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  dateContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   dateText: {
-    color: '#1A1A1A',
     fontSize: 16,
+    color: '#1A1A1A',
+    fontWeight: '500',
   },
   notificationIcon: {
     marginLeft: 10,
   },
   menuButton: {
-    backgroundColor: '#FE5B18',
+    backgroundColor: Color.otherOrange,
     width: 40,
     height: 40,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 15,
   },
   menuGrid: {
     gap: 4,
@@ -269,28 +377,6 @@ const styles = StyleSheet.create({
     height: 10,
     backgroundColor: '#FFFFFF',
     borderRadius: 3,
-  },
-  dateSection: {
-    marginTop: 3,
-    paddingLeft: 5,
-  },
-  todayContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  todayText: {
-    color: '#1A1A1A',
-    fontSize: 16,
-  },
-  checkmarkContainer: {
-    backgroundColor: '#4CAF50',
-    width: 20,
-    height: 20,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    
   },
   modalOverlay: {
     flex: 1,
@@ -348,6 +434,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
     marginTop: 0,
     paddingHorizontal: 20,
+    
   },
   titleSection: {
     flexDirection: 'row',
@@ -356,6 +443,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginTop: 20,
     marginBottom: 10,
+    marginLeft: -13,
   },
   sectionTitle: {
     fontSize: 24,
@@ -370,6 +458,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 10,
+    marginRight: -20,
   },
   newOrderText: {
     color: '#ffffff',
@@ -384,7 +473,9 @@ const styles = StyleSheet.create({
     padding: 20,
     marginTop: 5,
   },
-  calendarButton: {
-    marginLeft: 10,
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 1000,
   },
 });

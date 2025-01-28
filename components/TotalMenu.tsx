@@ -1,6 +1,11 @@
 import { BottomTabBarButtonProps } from '@react-navigation/bottom-tabs';
 import { PlatformPressable } from '@react-navigation/elements';
 import * as Haptics from 'expo-haptics';
+import { View, Text, StyleSheet, Image } from 'react-native';
+
+interface TotalMenuProps {
+  value: number;
+}
 
 export function HapticTab(props: BottomTabBarButtonProps) {
   return (
@@ -16,10 +21,8 @@ export function HapticTab(props: BottomTabBarButtonProps) {
     />
   );
 }
-import { View, Text, StyleSheet, Image } from 'react-native';
 
-export default function TotalMenu() {
-    const menu = global.dashboardData?.totalMenu || 0;
+export default function TotalMenu({ value }: TotalMenuProps) {
   return (
     <View style={styles.container}>
       <View style={styles.contentContainer}>
@@ -31,7 +34,7 @@ export default function TotalMenu() {
         </View>
         <View style={styles.textContainer}>
           <Text style={styles.title}>Total Menu</Text>
-          <Text style={styles.amount}>{menu.toLocaleString()}</Text>
+          <Text style={styles.amount}>{value.toLocaleString()}</Text>
         </View>
       </View>
     </View>

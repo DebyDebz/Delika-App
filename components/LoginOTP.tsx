@@ -38,13 +38,13 @@ export default function OTP({ visible, onClose, onVerify, phoneNumber, email }: 
     if (visible) {
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 200,
+        duration: -200,
         useNativeDriver: true,
       }).start();
     } else {
       Animated.timing(fadeAnim, {
         toValue: 0,
-        duration: 200,
+        duration: -200,
         useNativeDriver: true,
       }).start();
     }
@@ -113,12 +113,27 @@ export default function OTP({ visible, onClose, onVerify, phoneNumber, email }: 
         }
       );
 
-      const data = await response.json();
-
       if (response.ok) {
-        onClose();
-        router.replace('/home');
+        try {
+          // Get stored active menu index
+          const activeIndex = await AsyncStorage.getItem('activeMenuIndex');
+          
+          // Check permissions and navigate accordingly
+          if (activeIndex === '0' && !globalThis.userData?.permissions?.canViewOverview) {
+            router.replace('/orders' as any);
+          } else if (activeIndex === '0') {
+            router.replace('/home' as any);
+          } else if (activeIndex === '1') {
+            router.replace('/orders' as any);
+          } else {
+            router.replace('/orders' as any);
+          }
+        } catch (error) {
+          console.error('Navigation error:', error);
+          router.replace('/orders' as any);
+        }
       } else {
+        const data = await response.json();
         Alert.alert('Error', data.message || 'Invalid OTP');
       }
     } catch (error) {
@@ -150,6 +165,30 @@ export default function OTP({ visible, onClose, onVerify, phoneNumber, email }: 
     } else {
       Alert.alert('Error', 'Please enter a valid 4-digit code');
     }
+  };
+
+  const handleVerifyOTP = async () => {
+    // ... OTP verification logic ...
+    
+    try {
+      // Get stored active menu index
+      const activeIndex = await AsyncStorage.getItem('activeMenuIndex');
+      
+      // Check permissions and navigate accordingly
+      if (activeIndex === '0' && !globalThis.userData?.permissions?.canViewOverview) {
+        router.replace('/orders' as any);
+      } else if (activeIndex === '0') {
+        router.replace('/home' as any);
+      } else if (activeIndex === '1') {
+        router.replace('/orders' as any);
+      } else {
+        router.replace('/orders' as any);
+      }
+    } catch (error) {
+      console.error('Navigation error:', error);
+      router.replace('/orders' as any);
+    }
+    
   };
 
   if (!visible) return null;

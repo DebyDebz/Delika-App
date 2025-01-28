@@ -8,10 +8,11 @@ import {
   ScrollView,
   StatusBar,
   ActivityIndicator,
-  Alert
+  Alert,
+  Animated
 } from 'react-native';
 import { MaterialIcons, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { useLocalSearchParams, router } from 'expo-router';
 import { Color } from '../constants/GlobalStyles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -35,42 +36,32 @@ interface UserData {
   };
 }
 
+interface ProfileProps {
+  isVisible: boolean;
+  slideAnim: Animated.AnimatedValue;
+  onClose: () => void;
+  userData: UserData;
+}
+
 // Component
-export default function ProfileScreen() {
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export default function Profile() {
+  const { userData } = useLocalSearchParams();
+  const parsedUserData: UserData = userData ? JSON.parse(userData as string) : null;
 
-  useEffect(() => {
-    loadUserData();
-  }, []);
-
-  const loadUserData = async () => {
-    try {
-      setIsLoading(true);
-      const data = await AsyncStorage.getItem('userData');
-      if (data) {
-        setUserData(JSON.parse(data));
-      }
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (isLoading) {
+  if (!parsedUserData) {
     return (
-      <View style={[styles.container, styles.centerContent]}>
-        <ActivityIndicator size="large" color={Color.otherOrange} />
-      </View>
-    );
-  }
-
-  if (!userData) {
-    return (
-      <View style={[styles.container, styles.centerContent]}>
-        <Text style={styles.errorText}>Unable to load profile data</Text>
-      </View>
+      <ScrollView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <MaterialIcons name="arrow-back" size={24} color="#2D3436" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Profile</Text>
+          <View style={styles.spacer} />
+        </View>
+        <View style={[styles.content, styles.centerContent]}>
+          <Text style={styles.errorText}>Loading profile...</Text>
+        </View>
+      </ScrollView>
     );
   }
 
@@ -97,45 +88,58 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      
-      {/* Header */}
+      {/* Sticky Header */}
       <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <MaterialIcons name="arrow-back" size={24} color="#2D3436" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Profile</Text>
+        <View style={styles.spacer} />
+      </View>
+
+      {/* Scrollable Content */}
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Profile Info */}
         <View style={styles.profileInfo}>
           <Image
-            source={userData.image?.url ? { uri: userData.image.url } : require('../assets/images/logo.png')}
+            source={parsedUserData.image?.url ? { uri: parsedUserData.image.url } : require('../assets/images/logo.png')}
             style={styles.avatar}
           />
           <View style={styles.userInfo}>
-            <Text style={styles.name}>{userData.fullName}</Text>
+            <Text style={styles.name}>{parsedUserData.fullName}</Text>
             <View style={styles.roleContainer}>
               <MaterialCommunityIcons name="shield-account" size={16} color={Color.otherOrange} />
-              <Text style={styles.role}>{userData.role}</Text>
+              <Text style={styles.role}>{parsedUserData.role}</Text>
             </View>
           </View>
         </View>
-      </View>
 
-      {/* Content */}
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Restaurant Info */}
-        {renderSection('Restaurant Details', 'restaurant', <>
-          {renderInfoRow('business', 'Restaurant', userData._restaurantTable[0]?.restaurantName)}
-          {renderInfoRow('store', 'Branch', userData.branchesTable?.branchName)}
-          {renderInfoRow('place', 'Location', userData.branchesTable?.branchLocation)}
-        </>)}
+        {/* Content */}
+        <View style={styles.content}>
+          {/* Restaurant Info */}
+          {renderSection('Restaurant Details', 'restaurant', <>
+            {renderInfoRow('business', 'Restaurant', parsedUserData._restaurantTable[0]?.restaurantName)}
+            {renderInfoRow('store', 'Branch', parsedUserData.branchesTable?.branchName)}
+            {renderInfoRow('place', 'Location', parsedUserData.branchesTable?.branchLocation)}
+          </>)}
 
-        {/* Contact Info */}
-        {renderSection('Contact Information', 'contacts', <>
-          {renderInfoRow('email', 'Email', userData.email)}
-          {renderInfoRow('phone', 'Phone', userData.phoneNumber)}
-        </>)}
+          {/* Contact Info */}
+          {renderSection('Contact Information', 'contacts', <>
+            {renderInfoRow('email', 'Email', parsedUserData.email)}
+            {renderInfoRow('phone', 'Phone', parsedUserData.phoneNumber)}
+          </>)}
 
-        {/* Address Info */}
-        {renderSection('Address', 'location-on', <>
-          {renderInfoRow('home', 'Street', userData.address)}
-          {renderInfoRow('location-city', 'City', userData.city)}
-          {renderInfoRow('local-post-office', 'Postal Code', userData.postalCode)}
-        </>)}
+          {/* Address Info */}
+          {renderSection('Address', 'location-on', <>
+            {renderInfoRow('home', 'Street', parsedUserData.address)}
+            {renderInfoRow('location-city', 'City', parsedUserData.city)}
+            {renderInfoRow('local-post-office', 'Postal Code', parsedUserData.postalCode)}
+          </>)}
+        </View>
       </ScrollView>
     </View>
   );
@@ -148,17 +152,40 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   header: {
-    paddingTop: 20,
-    paddingHorizontal: 30,
-    paddingBottom: 10,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
     backgroundColor: '#ffffff',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    zIndex: 1000,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingTop: 60, // Height of header
+  },
+  backButton: {
+    padding: 8,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#2D3436',
+  },
+  spacer: {
+    width: 40, // Match backButton width for centering
   },
   profileInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 5,
+    paddingHorizontal: 30,
+    paddingVertical: 10,
   },
   avatar: {
     width: 80,
@@ -256,19 +283,5 @@ const styles = StyleSheet.create({
     color: '#2D3436',
     fontSize: 16,
     fontWeight: '500',
-  },
-  headerTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 30,
-  },
-  headerTitle: {
-    color: '#2D3436',
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  spacer: {
-    width: 28,
   },
 });

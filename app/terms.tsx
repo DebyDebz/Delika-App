@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   View, 
   Text, 
@@ -6,81 +6,156 @@ import {
   ScrollView, 
   TouchableOpacity, 
   Platform,
-  Animated,
-  Image
+  StatusBar,
+  Image,
+  Animated
 } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { Color } from '../constants/GlobalStyles';
 
 export default function TermsAndPrivacy() {
+  const router = useRouter();
+  const [expandedSection, setExpandedSection] = useState<number | null>(null);
+
   const sections = [
     {
-      icon: 'gavel',
-      title: 'Terms of Service',
-      description: 'By accessing our platform, you agree to be bound by these terms of service. Please read them carefully.',
-      items: ['Platform Usage', 'User Accounts', 'Payment Terms']
+      icon: 'description',
+      title: 'Agreement',
+      summary: 'Terms of Use & Service Agreement',
+      description: 'By using Delika, you agree to be bound by these terms. The platform is operated by Krontiva Africa Ltd, registered in Ghana.',
+      details: [
+        'Platform is operated by Krontiva Africa Ltd',
+        'Users must comply with all terms and conditions',
+        'Service available to users 18 years and above',
+        'Registration requires accurate information'
+      ]
     },
     {
-      icon: 'privacy-tip',
-      title: 'Privacy Policy',
-      description: 'We are committed to protecting your privacy and securing your personal data.',
-      items: ['Data Collection', 'Information Usage', 'Cookie Policy']
+      icon: 'gavel',
+      title: 'Services',
+      summary: 'Platform Services & Features',
+      description: 'Delika is a technology platform for restaurants to manage delivery services, connecting businesses with delivery riders.',
+      details: [
+        'Restaurant management system',
+        'Delivery service integration',
+        'Real-time order tracking',
+        'Inventory management tools'
+      ]
     },
     {
       icon: 'verified-user',
       title: 'User Rights',
-      description: 'Understanding your rights and responsibilities as a platform user.',
-      items: ['Access Rights', 'Data Portability', 'Account Deletion']
+      summary: 'Your Rights & Responsibilities',
+      description: 'Users must be 18+ and provide accurate information. We protect your rights while using our platform.',
+      details: [
+        'Right to access services',
+        'Data protection & privacy',
+        'Account security',
+        'Service accessibility'
+      ]
+    },
+    {
+      icon: 'security',
+      title: 'Security',
+      summary: 'Data & Payment Security',
+      description: 'We implement robust security measures to protect your data and transactions.',
+      details: [
+        'Encrypted transactions',
+        'Secure data storage',
+        'Privacy protection',
+        'Regular security audits'
+      ]
+    },
+    {
+      icon: 'payment',
+      title: 'Payments',
+      summary: 'Payment Terms & Conditions',
+      description: 'All transactions are in Ghanaian Cedis with clear subscription and fee structures.',
+      details: [
+        'Transparent pricing',
+        'Secure payment processing',
+        'Refund policies',
+        'Transaction records'
+      ]
     }
   ];
 
+  const toggleSection = (index: number) => {
+    setExpandedSection(expandedSection === index ? null : index);
+  };
+
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Terms & Conditions</Text>
+        <View style={styles.placeholder} />
+      </View>
+
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.banner}>
-          <MaterialIcons name="shield" size={32} color={Color.otherOrange} />
-          <Text style={styles.bannerSubtitle}>Last updated: January 2024</Text>
+          <MaterialIcons name="shield" size={22} color={Color.otherOrange} />
+          <Text style={styles.bannerTitle}>Legal Terms</Text>
+          <Text style={styles.bannerSubtitle}>
+            Please read these terms carefully before using our services
+          </Text>
         </View>
 
         {sections.map((section, index) => (
-          <View key={index} style={styles.card}>
-            <View style={styles.cardHeader}>
-              <View style={styles.iconContainer}>
-                <MaterialIcons name={section.icon as any} size={24} color={Color.otherOrange} />
+          <TouchableOpacity 
+            key={index} 
+            style={[
+              styles.section,
+              expandedSection === index && styles.sectionExpanded
+            ]}
+            onPress={() => toggleSection(index)}
+          >
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionIcon}>
+                <MaterialIcons 
+                  name={section.icon as keyof typeof MaterialIcons.glyphMap} 
+                  size={24} 
+                  color={Color.otherOrange} 
+                />
               </View>
-              <Text style={styles.cardTitle}>{section.title}</Text>
+              <View style={styles.sectionTitles}>
+                <Text style={styles.sectionTitle}>{section.title}</Text>
+                <Text style={styles.sectionSummary}>{section.summary}</Text>
+              </View>
+              <MaterialIcons 
+                name={expandedSection === index ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} 
+                size={24} 
+                color="#666666" 
+              />
             </View>
-            <Text style={styles.cardDescription}>{section.description}</Text>
-            <View style={styles.itemsList}>
-              {section.items.map((item, idx) => (
-                <View key={idx} style={styles.item}>
-                  <MaterialIcons name="check" size={20} color={Color.otherOrange} />
-                  <Text style={styles.itemText}>{item}</Text>
-                </View>
-              ))}
-            </View>
-            <TouchableOpacity style={styles.learnMore}>
-              <Text style={styles.learnMoreText}>Learn More</Text>
-              <MaterialIcons name="arrow-forward" size={20} color={Color.otherOrange} />
-            </TouchableOpacity>
-          </View>
+
+            {expandedSection === index && (
+              <View style={styles.sectionContent}>
+                <Text style={styles.sectionDescription}>{section.description}</Text>
+                {section.details.map((detail, idx) => (
+                  <View key={idx} style={styles.detailItem}>
+                    <MaterialIcons name="check-circle" size={20} color={Color.otherOrange} />
+                    <Text style={styles.detailText}>{detail}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </TouchableOpacity>
         ))}
 
-        <View style={styles.contactSection}>
-          <Text style={styles.contactTitle}>Need Help?</Text>
-          <Text style={styles.contactDescription}>
-            If you have any questions about our terms or privacy policy, please contact us.
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            For more information, contact our support team
           </Text>
           <TouchableOpacity style={styles.contactButton}>
             <MaterialIcons name="mail" size={24} color="#FFF" />
             <Text style={styles.contactButtonText}>Contact Support</Text>
           </TouchableOpacity>
-        </View>
-
-        <View style={styles.poweredBySection}>
-          <Text style={styles.poweredByText}>Powered by</Text>
-          <View style={styles.krontivaContainer}>
+          <View style={styles.poweredBy}>
+            <Text style={styles.poweredByText}>Powered by</Text>
             <Image 
               source={require('../assets/images/Krontiva-Black.png')}
               style={styles.krontivaLogo}
@@ -101,38 +176,32 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop:  40,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     backgroundColor: '#FFFFFF',
+    paddingTop: Platform.OS === 'ios' ? 47 : StatusBar.currentHeight,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    //backgroundColor: '#F5F5F5',
-    justifyContent: 'center',
-
-    
+    padding: 8,
   },
   headerTitle: {
-    flex: 1,
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: '600',
     color: '#1A1A1A',
-    textAlign: 'center',
-    marginRight: 40,
-    alignSelf: 'center',
+  },
+  placeholder: {
+    width: 40,
   },
   content: {
     flex: 1,
   },
   banner: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8F9FA',
     padding: 24,
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    //borderBottomWidth: 1,
+    //borderBottomColor: '#F0F0F0',
   },
   bannerTitle: {
     fontSize: 28,
@@ -145,7 +214,7 @@ const styles = StyleSheet.create({
     color: '#666666',
     marginTop: 4,
   },
-  card: {
+  section: {
     backgroundColor: '#FFFFFF',
     margin: 16,
     borderRadius: 16,
@@ -162,12 +231,12 @@ const styles = StyleSheet.create({
       }
     }),
   },
-  cardHeader: {
+  sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
   },
-  iconContainer: {
+  sectionIcon: {
     width: 48,
     height: 48,
     borderRadius: 24,
@@ -176,58 +245,49 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
   },
-  cardTitle: {
+  sectionTitles: {
+    flex: 1,
+  },
+  sectionTitle: {
     fontSize: 20,
     fontWeight: '600',
     color: '#1A1A1A',
   },
-  cardDescription: {
+  sectionSummary: {
     fontSize: 15,
     color: '#666666',
     lineHeight: 22,
     marginBottom: 16,
   },
-  itemsList: {
-    gap: 12,
+  sectionExpanded: {
+    padding: 20,
   },
-  item: {
+  sectionContent: {
+    padding: 20,
+  },
+  sectionDescription: {
+    fontSize: 15,
+    color: '#666666',
+    lineHeight: 22,
+    marginBottom: 16,
+  },
+  detailItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
-  itemText: {
+  detailText: {
     fontSize: 15,
     color: '#1A1A1A',
   },
-  learnMore: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    marginTop: 16,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-  },
-  learnMoreText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: Color.otherOrange,
-    marginRight: 8,
-  },
-  contactSection: {
-    backgroundColor: '#FFFFFF',
+  footer: {
+    //backgroundColor: '#FFFFFF',
     margin: 16,
     padding: 24,
     borderRadius: 16,
     alignItems: 'center',
   },
-  contactTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#1A1A1A',
-    marginBottom: 8,
-  },
-  contactDescription: {
+  footerText: {
     fontSize: 15,
     color: '#666666',
     textAlign: 'center',
@@ -249,7 +309,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  poweredBySection: {
+  poweredBy: {
     alignItems: 'center',
     padding: 24,
     paddingBottom: 40,
@@ -258,11 +318,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666666',
     marginBottom: 4,
-  },
-  krontivaContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
   },
   krontivaLogo: {
     width: 80,

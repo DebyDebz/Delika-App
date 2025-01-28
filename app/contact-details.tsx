@@ -1,19 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import AddStaff from '../components/AddStaff'; // Ensure the correct path to AddStaff
-import { Color } from '../constants/GlobalStyles';
+import Contact from '../components/contact';
 
-const AddStaffMembers = () => {
+export default function ContactDetailsScreen() {
   const router = useRouter();
-  const [modalVisible, setModalVisible] = useState(true);
 
   const handleBack = () => {
     router.back();
   };
-
-  console.log('AddStaffMembers component rendered');
 
   return (
     <View style={styles.container}>
@@ -21,21 +17,24 @@ const AddStaffMembers = () => {
         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Add Member</Text>
+        <Text style={styles.headerTitle}>Contact Us</Text>
         <View style={styles.placeholder} />
       </View>
-      <AddStaff 
-        visible={modalVisible} // Pass the modal visibility state
-        onClose={() => setModalVisible(false)} // Close the modal
-      />
+      <View style={styles.contentContainer}>
+        <Contact />
+      </View>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+  },
+  contentContainer: {
+    flex: 1,
+    position: 'relative',
   },
   header: {
     flexDirection: 'row',
@@ -45,7 +44,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: '#FFFFFF',
     paddingTop: Platform.OS === 'ios' ? 47 : StatusBar.currentHeight,
-    marginTop: -20,
   },
   backButton: {
     padding: 8,
@@ -59,5 +57,3 @@ const styles = StyleSheet.create({
     width: 40,
   },
 });
-
-export default AddStaffMembers;

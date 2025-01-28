@@ -83,6 +83,12 @@ export default function AllOrdersDetails() {
               <Text style={styles.value}>{params.courierName}</Text>
             </View>
           )}
+          {params.courierPhoneNumber && (
+            <View style={styles.row}>
+              <Text style={styles.label}> Phone Number:</Text>
+              <Text style={styles.value}>{params.courierPhoneNumber}</Text>
+            </View>
+          )}
           {params.dropoffName && (
             <View style={styles.row}>
               <Text style={styles.label}>Dropoff:</Text>

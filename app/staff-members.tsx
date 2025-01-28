@@ -1,22 +1,54 @@
-import { useNavigation } from '@react-navigation/native';
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Platform, StatusBar } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { View, Text, TouchableOpacity } from 'react-native';
-import Staff from '@/components/staff';
+import Staff from '../components/staff';
 
-const TeamManagement = () => {
-  const navigation = useNavigation();
+export default function StaffMembers() {
+  const router = useRouter();
 
-  const restaurantId = "your-restaurant-id";
-  const branchId = "your-branch-id";
+  const handleBack = () => {
+    router.back();
+  };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
-      <Staff 
-        restaurantId={restaurantId}
-        branchId={branchId}
-      />
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>All Staff</Text>
+        <View style={styles.placeholder} />
+      </View>
+      <Staff restaurantId="your-restaurant-id" branchId="your-branch-id" />
     </View>
   );
-};
+}
 
-export default TeamManagement;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
+    paddingTop: Platform.OS === 'ios' ? 47 : StatusBar.currentHeight,
+    marginTop: -20,
+  },
+  backButton: {
+    padding: 8,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#1A1A1A',
+  },
+  placeholder: {
+    width: 40,
+  },
+});

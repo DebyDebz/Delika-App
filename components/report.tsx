@@ -21,6 +21,7 @@ import * as Print from 'expo-print';
 import ViewShot, { ViewShotProperties } from "react-native-view-shot";
 import { Calendar } from 'react-native-calendars';
 import { DateData } from 'react-native-calendars';
+import { useSelectedBranch } from '../context/SelectedBranchContext';
 
 interface OrderType {
   id: string;
@@ -524,6 +525,7 @@ const styles = StyleSheet.create({
 });
 
 export default function EnhancedReport({ initialRestaurantId, initialBranchId }: OrderReportProps) {
+  const { selectedBranch } = useSelectedBranch();
   const [orders, setOrders] = useState<OrderType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -540,10 +542,25 @@ export default function EnhancedReport({ initialRestaurantId, initialBranchId }:
       setIsLoading(true);
       setError(null);
 
+      const restaurantId = globalThis.userData?._restaurantTable[0]?.id;
+      let currentBranchId;
+
+      if (globalThis.userData?.role === 'Admin') {
+        // For Admin, use the selected branch ID if provided
+        currentBranchId = selectedBranch?.id || globalThis.userData?.branchesTable?.id;
+      } else {
+        // For non-Admin, always use their assigned branch
+        currentBranchId = globalThis.userData?.branchesTable?.id;
+      }
+
+      if (!restaurantId || !currentBranchId) {
+        throw new Error('Missing required IDs');
+      }
+
       const response = await fetch(
         `https://api-server.krontiva.africa/api:uEBBwbSs/get/all/orders/per/branch?` +
-        `restaurantId=${encodeURIComponent(initialRestaurantId)}&` +
-        `branchId=${encodeURIComponent(initialBranchId)}`,
+        `restaurantId=${encodeURIComponent(restaurantId)}&` +
+        `branchId=${encodeURIComponent(currentBranchId)}`,
         {
           method: 'GET',
           headers: {
@@ -622,16 +639,22 @@ export default function EnhancedReport({ initialRestaurantId, initialBranchId }:
       return orderMonth === selectedMonth;
     });
 
-    const paymentStats = filteredOrders.reduce((acc, order) => {
-      const status = order.paymentStatus;
-      acc[status] = (acc[status] || 0) + Number(order.totalPrice);
+    const weeklyData = filteredOrders.reduce((acc, order) => {
+      const orderDate = new Date(order.orderDate);
+      const weekNumber = Math.ceil((orderDate.getDate()) / 7);
+      acc[weekNumber] = (acc[weekNumber] || 0) + Number(order.totalPrice);
       return acc;
-    }, {} as Record<string, number>);
+    }, {} as Record<number, number>);
 
     return {
-      labels: Object.keys(paymentStats),
+      labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
       datasets: [{
-        data: Object.values(paymentStats)
+        data: [
+          weeklyData[1] || 0,
+          weeklyData[2] || 0,
+          weeklyData[3] || 0,
+          weeklyData[4] || 0
+        ]
       }]
     };
   };
@@ -688,12 +711,7 @@ export default function EnhancedReport({ initialRestaurantId, initialBranchId }:
       ranges[rangeLabel] = (ranges[rangeLabel] || 0) + Number(order.totalPrice);
     });
 
-    return {
-      labels: Object.keys(ranges),
-      datasets: [{
-        data: Object.values(ranges)
-      }]
-    };
+    return Object.values(ranges);
   };
 
   const MonthPicker = () => {
@@ -797,7 +815,14 @@ export default function EnhancedReport({ initialRestaurantId, initialBranchId }:
   const downloadReport = async () => {
     try {
       // Get chart data
-      const chartData = getMonthlyPaymentData();
+      const chartData = {
+        labels: ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"],
+        datasets: [
+          {
+            data: getMonthlyPaymentData(),
+          },
+        ],
+      };
       
       const html = `
         <html>
@@ -1117,7 +1142,7 @@ export default function EnhancedReport({ initialRestaurantId, initialBranchId }:
               </Text>
               <ViewShot ref={chartRef} options={{ format: "png", quality: 1 }}>
                 <LineChart
-                  data={getMonthlyPaymentData()}
+                  data={getPaymentChartData()}
                   width={Dimensions.get('window').width - 64}
                   height={220}
                   yAxisLabel="GH₵ "

@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity, Image, Animated, Dimensions } from 'react-native';
-import { router } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 import { useState, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Color } from '../constants/GlobalStyles';
@@ -11,20 +11,37 @@ interface MenuProps {
 export default function Menu({ onClose }: MenuProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const slideAnim = useRef(new Animated.Value(-300)).current;
+  const pathname = usePathname();
+  const ANIMATION_DURATION = -300; // Consistent animation duration
 
+  // Open animation
   useEffect(() => {
-    Animated.spring(slideAnim, {
-      toValue: 0,
-      useNativeDriver: true,
-      speed: 15,
-      bounciness: 5
-    }).start();
-
     const loadActiveIndex = async () => {
       try {
         const savedIndex = await AsyncStorage.getItem('activeMenuIndex');
         if (savedIndex !== null) {
-          setActiveIndex(Number(savedIndex));
+          setActiveIndex(parseInt(savedIndex));
+        }
+      } catch (error) {
+        console.error('Error loading active index:', error);
+      }
+    };
+    loadActiveIndex();
+
+    Animated.timing(slideAnim, {
+      toValue: 0,
+      duration: ANIMATION_DURATION,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  // Load saved active index on mount
+  useEffect(() => {
+    const loadActiveIndex = async () => {
+      try {
+        const savedIndex = await AsyncStorage.getItem('activeMenuIndex');
+        if (savedIndex !== null) {
+          setActiveIndex(parseInt(savedIndex));
         }
       } catch (error) {
         console.error('Error loading active index:', error);
@@ -33,62 +50,112 @@ export default function Menu({ onClose }: MenuProps) {
     loadActiveIndex();
   }, []);
 
+  // Update active index when route changes
+  useEffect(() => {
+    const menuIndex = filteredMenuItems.findIndex(item => item.route === pathname);
+    if (menuIndex !== -1) {
+      setActiveIndex(menuIndex);
+      AsyncStorage.setItem('activeMenuIndex', menuIndex.toString());
+    }
+  }, [pathname]);
+
   const menuItems = [
     { 
       icon: require('../assets/images/overview.png'),
       label: 'Overview', 
       route: '/home',
-      description: 'Dashboard & Analytics'
+      description: 'Dashboard',
+      permission: 'canViewOverview'
     },
     { 
       icon: require('../assets/images/my orders.png'),
       label: 'My Orders', 
       route: '/orders',
-      description: 'Manage Orders'
+      description: 'Manage Orders',
+      alwaysShow: true
     },
     { 
       icon: require('../assets/images/menu.png'),
       label: 'Menu Items', 
       route: '/menu-items',
-      description: 'Food & Categories'
+      description: 'Food & Categories',
+      permission: 'canViewInventory'
     },
     { 
       icon: require('../assets/images/staff.png'),
       label: 'Staff', 
       route: '/staff-members',
-      description: 'Team Management'
+      description: 'Team Management',
+      alwaysShow: true
     },
     { 
       icon: require('../assets/images/transaction.png'),
       label: 'Transactions', 
       route: '/transactions',
-      description: 'Payment History'
+      description: 'Payment History',
+      permission: 'canViewTransactions'
     },
     { 
       icon: require('../assets/images/report.png'),
       label: 'Reports', 
       route: '/menu_report',
-      description: 'Business Analytics'
+      description: 'Analytics & Stats',
+      permission: 'canViewReports'
     },
     { 
       icon: require('../assets/images/setting.png'),
       label: 'Settings', 
       route: '/settings',
-      description: 'App Configuration'
+      description: 'App Configuration',
+      alwaysShow: true
     },
   ];
 
-  const handlePress = async (route: string, index: number) => {
-    setActiveIndex(index);
+  const filteredMenuItems = menuItems.filter(item => {
     try {
-      await AsyncStorage.setItem('activeMenuIndex', index.toString());
+      // If no permissions object exists or item is marked as alwaysShow, show the item
+      if (!globalThis.userData?.permissions || item.alwaysShow) {
+        return true;
+      }
+      
+      // If item requires permission and it's restricted (false), hide it
+      if (item.permission) {
+        return globalThis.userData.permissions[item.permission as keyof typeof globalThis.userData.permissions];
+      }
+      
+      return true;
     } catch (error) {
-      console.error('Error saving active index:', error);
+      console.error('Error filtering menu item:', error);
+      return true; // Show item on error
     }
-    onClose();
-    setTimeout(() => {
-      router.push(route as any);
-    }, 300);
+  });
+
+  // Handle close with synchronized animation
+  const handleClose = () => {
+    Animated.timing(slideAnim, {
+      toValue: -300,
+      duration: ANIMATION_DURATION,
+      useNativeDriver: true,
+    }).start(() => {
+      setTimeout(() => onClose(), ANIMATION_DURATION / 2);
+    });
+  };
+
+  const handlePress = async (route: string, index: number) => {
+    try {
+      // ... permission checks ...
+
+      setActiveIndex(index);
+      await AsyncStorage.setItem('activeMenuIndex', index.toString());
+      
+      if (pathname !== route) {
+        router.push(route as any);
+      }
+      handleClose();
+      
+    } catch (error) {
+      console.error('Error handling menu press:', error);
+    }
   };
 
   const handleLogout = async () => {
@@ -129,7 +196,7 @@ export default function Menu({ onClose }: MenuProps) {
       </View>
 
       <View style={styles.menuList}>
-        {menuItems.map((item, index) => (
+        {filteredMenuItems.map((item, index) => (
           <TouchableOpacity 
             key={index}
             style={[
@@ -186,11 +253,12 @@ const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     backgroundColor: '#FFFFFF',
-    width: '90%',
+    width: '100%',
     height: '100%',
     paddingTop: 10,
-    
+   
   },
   profileSection: {
     alignItems: 'center',

@@ -19,6 +19,7 @@ import { Food, MenuItem } from '../types/menu';
 import { useRouter } from 'expo-router';
 import { useNotification } from '../context/NotificationContext';
 import { sendNotification } from '../utils/notifications';
+import { useSelectedBranch } from '../context/SelectedBranchContext';
 
 interface CategoryListProps {
   categories: MenuItem[];
@@ -37,10 +38,22 @@ export default function MenuItems() {
   const [selectedFood, setSelectedFood] = useState<Food | null>(null);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const { selectedBranch } = useSelectedBranch();
 
   const fetchMenuItems = useCallback(async (showLoader = true) => {
     try {
-      if (!globalThis.userData?.restaurantId || !globalThis.userData?.branchId) {
+      const restaurantId = globalThis.userData?._restaurantTable[0]?.id;
+      let currentBranchId;
+
+      if (globalThis.userData?.role === 'Admin') {
+        // For Admin, use the selected branch ID if provided
+        currentBranchId = selectedBranch?.id || globalThis.userData?.branchesTable?.id;
+      } else {
+        // For non-Admin, always use their assigned branch
+        currentBranchId = globalThis.userData?.branchesTable?.id;
+      }
+
+      if (!restaurantId || !currentBranchId) {
         throw new Error('Missing required IDs');
       }
 
@@ -66,9 +79,8 @@ export default function MenuItems() {
             'Authorization': `Bearer ${globalThis.userData?.token || ''}`
           },
           body: JSON.stringify({
-            restaurantId: String(globalThis.userData.restaurantId),
-            branchId: String(globalThis.userData.branchId),
-            
+            restaurantId: String(restaurantId),
+            branchId: String(currentBranchId)
           })
         }
       );
@@ -149,51 +161,56 @@ export default function MenuItems() {
   ), []);
 
   const renderFoodItem = useCallback(({ item }: { item: Food }) => {
-    console.log('Food Item Image:', {
-      foodImage: item.foodImage,
-      url: item.foodImage?.url,
-      fullItem: item
-    });
-
     return (
-      <TouchableOpacity 
-        style={styles.menuItem}
-        onPress={() => {
-          const imageUrl = item.foodImage?.url;
-          router.push({
-            pathname: '/menu-details',
-            params: {
-              id: item.id,
-              name: item.name,
-              price: item.price,
-              description: item.description,
-              quantity: item.quantity,
-              imageUrl: imageUrl || null,
-            }
-          });
-        }}
-      >
-        <View style={styles.imageContainer}>
-          <Image 
-            source={
-              item.foodImage?.url 
-                ? { 
-                    uri: item.foodImage.url,
-                    headers: {
-                      Authorization: `Bearer ${globalThis.userData?.token || ''}`
+      <View style={styles.menuItem}>
+        <TouchableOpacity 
+          style={styles.mainContent}
+          onPress={() => {
+            const imageUrl = item.foodImage?.url;
+            router.push({
+              pathname: '/menu-details',
+              params: {
+                id: item.id,
+                name: item.name,
+                price: item.price,
+                description: item.description,
+                quantity: item.quantity,
+                imageUrl: imageUrl || null,
+              }
+            });
+          }}
+        >
+          <View style={styles.imageContainer}>
+            <Image 
+              source={
+                item.foodImage?.url 
+                  ? { 
+                      uri: item.foodImage.url,
+                      headers: {
+                        Authorization: `Bearer ${globalThis.userData?.token || ''}`
+                      }
                     }
-                  }
-                : require('../assets/images/logo.png')
-            }
-            style={styles.menuImage}
-            onError={(e) => console.log('Image Error:', e.nativeEvent.error)}
-          />
-          <View style={[
-            styles.stockBadge,
-            { backgroundColor: item.quantity > 0 ? 'rgba(46, 213, 115, 0.9)' : 'rgba(255, 71, 87, 0.9)' }
-          ]}>
-            <Text style={styles.stockText}>
-              {item.quantity > 0 ? 'In Stock' : 'Out of Stock'}
+                  : require('../assets/images/logo.png')
+              }
+              style={styles.menuImage}
+              onError={(e) => console.log('Image Error:', e.nativeEvent.error)}
+            />
+            <View style={[
+              styles.stockBadge,
+              { backgroundColor: item.quantity > 0 ? 'rgba(46, 213, 115, 0.9)' : 'rgba(255, 71, 87, 0.9)' }
+            ]}>
+              <Text style={styles.stockText}>
+                {item.quantity > 0 ? 'In Stock' : 'Out of Stock'}
+              </Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+        
+        <View style={styles.menuContent}>
+          <View style={styles.menuInfo}>
+            <Text style={styles.menuName} numberOfLines={1}>{item.name}</Text>
+            <Text style={styles.menuPrice}>
+              GH₵{(Number(item.price) || 0).toFixed(2)}
             </Text>
           </View>
           <TouchableOpacity 
@@ -201,19 +218,12 @@ export default function MenuItems() {
             onPress={() => {
               setSelectedFood(item);
               setIsEditModalVisible(true);
-              console.log('Edit button pressed, modal visibility:', isEditModalVisible);
             }}
           >
-            <MaterialIcons name="edit" size={18} color="#FFFFFF" />
+            <MaterialIcons name="edit" size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
-        <View style={styles.menuContent}>
-          <Text style={styles.menuName} numberOfLines={1}>{item.name}</Text>
-          <Text style={styles.menuPrice}>
-            GH₵{(Number(item.price) || 0).toFixed(2)}
-          </Text>
-        </View>
-      </TouchableOpacity>
+      </View>
     );
   }, []);
 
@@ -441,9 +451,13 @@ const styles = StyleSheet.create({
   },
   menuContent: {
     padding: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   menuInfo: {
     flex: 1,
+    marginRight: 8,
   },
   menuName: {
     fontSize: 15,
@@ -472,13 +486,10 @@ const styles = StyleSheet.create({
     height: 140,
   },
   editButton: {
-    position: 'absolute',
-    right: 8,
-    top: 170,
     backgroundColor: Color.otherOrange,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 2,
@@ -540,5 +551,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
+  },
+  mainContent: {
+    flex: 1,
   },
 });

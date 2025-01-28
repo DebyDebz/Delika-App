@@ -14,6 +14,7 @@ import { Color } from '../constants/GlobalStyles';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Calendar, DateData } from 'react-native-calendars';
 import Receipt from './receipts';
+import { useSelectedBranch } from '../context/SelectedBranchContext';
 
 
 interface OrdersByDate {
@@ -30,6 +31,10 @@ interface OrdersByDate {
   dropoffName: string;
   courierName: string;
   created_at: number;
+  branchId: string;
+  branch: {
+    branchName: string;
+  };
 }
 
 export default function Payment() {
@@ -46,19 +51,30 @@ export default function Payment() {
     abandoned: 0,
     all: 0
   });
+  const { selectedBranch } = useSelectedBranch();
 
   const fetchOrdersByDate = async (date: Date) => {
     try {
       setIsLoading(true);
       const formattedDate = date.toISOString().split('T')[0];
+      const restaurantId = globalThis.userData?._restaurantTable[0]?.id;
+      let currentBranchId;
 
-      if (!globalThis.userData?.restaurantId || !globalThis.userData?.branchId) {
+      if (globalThis.userData?.role === 'Admin') {
+        // For Admin, use the selected branch ID if provided
+        currentBranchId = selectedBranch?.id || globalThis.userData?.branchesTable?.id;
+      } else {
+        // For non-Admin, always use their assigned branch
+        currentBranchId = globalThis.userData?.branchesTable?.id;
+      }
+
+      if (!restaurantId || !currentBranchId) {
         throw new Error('Missing required IDs');
       }
 
       const url = 'https://api-server.krontiva.africa/api:uEBBwbSs/filter/orders/by/date';
       const response = await fetch(
-        `${url}?restaurantId=${globalThis.userData.restaurantId}&branchId=${globalThis.userData.branchId}&date=${formattedDate}`,
+        `${url}?restaurantId=${restaurantId}&branchId=${currentBranchId}&date=${formattedDate}`,
         {
           method: 'GET',
           headers: {
@@ -166,6 +182,10 @@ export default function Payment() {
               hour12: true
             })}
           </Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Branch</Text>
+          <Text style={styles.infoValue}>{item.branch.branchName}</Text>
         </View>
       </View>
 
@@ -520,7 +540,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   filterTabText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '500',
     color: '#666666',
   },
@@ -541,5 +561,12 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 11,
     fontWeight: '600',
+  },
+  branchText: {
+    fontSize: 13,
+    color: '#666666',
+    fontWeight: '500',
+    flex: 1,
+    textAlign: 'right',
   },
 });

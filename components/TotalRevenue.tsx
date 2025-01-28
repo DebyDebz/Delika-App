@@ -1,7 +1,10 @@
 import { View, Text, StyleSheet, Image } from 'react-native';
 
-export default function TotalRevenue() {
-    const revenue = global.dashboardData?.totalRevenue || 0;
+interface TotalRevenueProps {
+  value: number;
+}
+
+export default function TotalRevenue({ value }: TotalRevenueProps) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -13,7 +16,7 @@ export default function TotalRevenue() {
         />
         <Text style={styles.title}>Total Revenue</Text>
       </View>
-      <Text style={styles.amount}>GH₵ {revenue.toLocaleString()}</Text>
+      <Text style={styles.amount}>GH₵ {value.toLocaleString()}</Text>
     </View>
   );
 }

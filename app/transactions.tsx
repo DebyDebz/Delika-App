@@ -5,18 +5,27 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import { Color } from '../constants/GlobalStyles';
 import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useRouter } from 'expo-router';
 import Payment from '../components/Payment';
+
+import { Ionicons } from '@expo/vector-icons';
 
 export default function TransactionsScreen() {
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     setIsLoading(false);
   }, []);
+
+  const handleBack = () => {
+    router.back();
+  };
 
   if (isLoading) {
     return (
@@ -28,6 +37,13 @@ export default function TransactionsScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#1A1A1A" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>All Transactions</Text>
+        <View style={styles.placeholder} />
+      </View>
       <Payment />
     </View>
   );
@@ -41,22 +57,23 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 20,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    paddingTop: Platform.OS === 'ios' ? 47 : StatusBar.currentHeight,
+    marginTop: -20,
   },
   backButton: {
-    marginRight: 16,
-    padding: 4,
+    padding: 8,
   },
-  title: {
+  headerTitle: {
     fontSize: 20,
-    fontWeight: '700',
-    color: '#2D3436',
-    marginLeft: 60,
+    fontWeight: '600',
+    color: '#1A1A1A',
+  },
+  placeholder: {
+    width: 40,
   },
   centerContainer: {
     flex: 1,

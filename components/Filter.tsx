@@ -75,7 +75,10 @@ const styles = StyleSheet.create({
     padding: 20,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
     minHeight: '30%',
+    marginBottom: 200,
   },
   filterHeader: {
     flexDirection: 'row',

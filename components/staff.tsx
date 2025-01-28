@@ -15,6 +15,7 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Color } from '../constants/GlobalStyles';
 import EditMember from './EditStaff';
 import { useRouter } from 'expo-router';
+import { useSelectedBranch } from '../context/SelectedBranchContext';
 
 interface TeamMember {
   id: number;
@@ -30,6 +31,8 @@ interface TeamMember {
   address?: string;
   postalCode?: string;
   dateOfBirth?: string;
+  branchId?: number;
+  branchName?: string;
 }
 
 interface StaffProps {
@@ -38,6 +41,7 @@ interface StaffProps {
 }
 
 const Staff = ({ restaurantId, branchId }: StaffProps) => {
+  const { selectedBranch } = useSelectedBranch();
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,52 +55,78 @@ const Staff = ({ restaurantId, branchId }: StaffProps) => {
       if (showLoader) setLoading(true);
       setError(null);
 
-      if (!globalThis.userData?.restaurantId || !globalThis.userData?.branchId) {
-        throw new Error('Missing restaurant or branch ID');
-      }
+      const isAdmin = globalThis.userData?.role === 'Admin';
+      console.log('Is Admin:', isAdmin);
+      console.log('Current Restaurant ID:', globalThis.userData?.restaurantId);
+      console.log('Selected Branch:', selectedBranch);
+      
+      const requestBody = {
+        restaurantId: isAdmin 
+          ? (selectedBranch?.restaurantId || globalThis.userData?.restaurantId)
+          : globalThis.userData?.restaurantId,
+        branchId: isAdmin
+          ? (selectedBranch?.id || globalThis.userData?.branchId)
+          : globalThis.userData?.branchId
+      };
+
+      console.log('Request Body:', requestBody);
 
       const response = await fetch(
-          'https://api-server.krontiva.africa/api:uEBBwbSs/get/team/members',
-          {
+        isAdmin 
+          ? 'https://api-server.krontiva.africa/api:uEBBwbSs/get/team/members/admin'
+          : 'https://api-server.krontiva.africa/api:uEBBwbSs/get/team/members',
+        {
           method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
+          headers: {
+            'Content-Type': 'application/json',
             'Authorization': `Bearer ${globalThis.userData?.token || ''}`
           },
-          body: JSON.stringify({
-            restaurantId: globalThis.userData.restaurantId,
-            branchId: globalThis.userData.branchId,
-          })
+          body: JSON.stringify(requestBody)
         }
       );
 
       if (!response.ok) {
-        throw new Error('Failed to fetch team members');
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        throw new Error(`Failed to fetch team members: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('API Response:', data);
+      console.log('API Response Data:', data);
 
-      const transformedData = data.map((member: any) => {
-        const imageUrl = member.image?.url || 
-                        member.profileImage || 
-                        member.avatar || 
-                        null;
+      if (!data || data.length === 0) {
+        console.log('No team members found');
+        setTeamMembers([]);
+        return;
+      }
 
-        return {
-          ...member,
-          status: Boolean(member.status),
-          image_url: imageUrl
-        };
-      });
+      const transformedData = data.map((member: any) => ({
+        id: member.id,
+        name: member.name || member.fullName,
+        role: member.role,
+        status: Boolean(member.Status),
+        image_url: member.image?.url,
+        email: member.email,
+        phoneNumber: member.phoneNumber,
+        userName: member.userName,
+        fullName: member.fullName,
+        country: member.country,
+        city: member.city,
+        address: member.address,
+        postalCode: member.postalCode,
+        dateOfBirth: member.dateOfBirth,
+        branchId: member.branchId,
+        branchName: member.branchesTable?.branchName || 'N/A'
+      }));
 
       console.log('Transformed Data:', transformedData);
       setTeamMembers(transformedData);
-      } catch (err) {
-        setError('Failed to fetch team members');
-      console.error('Error:', err);
+    } catch (err) {
+      console.error('Error details:', err);
+      setError('Failed to fetch team members');
+      setTeamMembers([]);
     } finally {
-        setLoading(false);
+      setLoading(false);
       setRefreshing(false);
     }
   };
@@ -112,8 +142,9 @@ const Staff = ({ restaurantId, branchId }: StaffProps) => {
   };
 
   useEffect(() => {
+    console.log('Effect triggered - Fetching team members');
     fetchTeamMembers();
-  }, []);
+  }, [selectedBranch]);
 
   const handleEdit = (member: TeamMember) => {
     setSelectedMember(member);
@@ -122,8 +153,8 @@ const Staff = ({ restaurantId, branchId }: StaffProps) => {
 
   const handleDelete = (member: TeamMember) => {
     Alert.alert(
-      'Delete Member',
-      `Are you sure you want to remove ${member.name} from the team?`,
+      'Delete Staff',
+      `Are you sure you want to remove ${member.fullName || member.name} from the team?`,
       [
         {
           text: 'Cancel',
@@ -164,7 +195,10 @@ const Staff = ({ restaurantId, branchId }: StaffProps) => {
 
   const TeamMemberCard = ({ member }: { member: TeamMember }) => {
     const imageUrl = getImageUrl(member);
-    console.log('Processed Image URL:', imageUrl);
+    const formatDate = (date: string | undefined) => {
+      if (!date) return 'N/A';
+      return new Date(date).toLocaleDateString();
+    };
     
     return (
       <View style={styles.card}>
@@ -172,29 +206,23 @@ const Staff = ({ restaurantId, branchId }: StaffProps) => {
           <View style={styles.imageWrapper}>
             {imageUrl ? (
               <Image
-                source={{ 
-                  uri: imageUrl,
-                  headers: {
-                    'Authorization': `Bearer ${globalThis.userData?.token || ''}`
-                  }
-                }}
+                source={{ uri: imageUrl }}
                 style={styles.profileImage}
                 defaultSource={require('../assets/images/logo.png')}
-                onError={(e) => {
-                  console.log('Image Error:', e.nativeEvent.error);
-                  console.log('Failed URL:', imageUrl);
-                }}
               />
             ) : (
               <View style={styles.placeholderImage}>
-                <Ionicons name="person" size={32} color="#9CA3AF" />
+                <MaterialIcons name="person" size={24} color="#9CA3AF" />
               </View>
             )}
           </View>
-
           <View style={styles.mainInfo}>
             <Text style={styles.name}>{member.fullName || member.name}</Text>
             <Text style={styles.role}>{member.role || 'Staff Member'}</Text>
+            <View style={styles.branchContainer}>
+              <MaterialIcons name="store" size={14} color="#666666" />
+              <Text style={styles.branchName}>{member.branchName}</Text>
+            </View>
             <Text style={styles.username}>@{member.userName || 'N/A'}</Text>
           </View>
 
@@ -254,6 +282,31 @@ const Staff = ({ restaurantId, branchId }: StaffProps) => {
       </View>
     );
   };
+
+  if (loading) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color={Color.otherOrange} />
+        <Text style={styles.loadingText}>Loading team members...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.centerContainer}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity 
+            style={styles.retryButton}
+            onPress={() => fetchTeamMembers()}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -541,6 +594,28 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: '#6B7280',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#6B7280',
+    marginTop: 16,
+  },
+  branchInfo: {
+    fontSize: 12,
+    color: '#666666',
+    marginTop: 2,
+    fontWeight: '500'
+  },
+  branchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 2,
+  },
+  branchName: {
+    fontSize: 12,
+    color: '#666666',
+    fontWeight: '500',
   },
 });
 

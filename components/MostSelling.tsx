@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from
 import Filter from '../components/Filter';
 import { useState, useEffect } from 'react';
 import { MaterialIcons, Feather } from '@expo/vector-icons';
+import { useSelectedBranch } from '../context/SelectedBranchContext';
 
 type MenuItems = {
   name: string;
@@ -10,44 +11,70 @@ type MenuItems = {
 }
 
 export default function MostSelling() {
+  const { selectedBranch } = useSelectedBranch();
   const [items, setItems] = useState<MenuItems[]>([]);
   const [showFilter, setShowFilter] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchMostSellingItems = async () => {
     try {
       setLoading(true);
+      setError(null);
+      
+      const isAdmin = global.userData?.role === 'Admin';
+      console.log('User Role:', global.userData?.role);
+      console.log('Restaurant ID:', global.userData?.restaurantId);
+      
+      // Default UUID for branchId when none is selected
+      const defaultBranchId = global.userData?.branchId;
+      
+      const requestData = {
+        restaurantId: selectedBranch?.restaurantId || global.userData?.restaurantId,
+        branchId: selectedBranch?.id || defaultBranchId,
+        date: new Date().toISOString().split("T")[0]
+      };
+
+      console.log('Request Data:', requestData);
+
       const response = await fetch(
         "https://api-server.krontiva.africa/api:uEBBwbSs/filter/orders/revenue/by/date/most/selling/items",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${global.userData?.token}`
+          },
           body: JSON.stringify({
-            restaurantId: global.userData?.restaurantId,
-            branchId: global.userData?.branchId,
-            date: new Date().toISOString().split("T")[0]
+            ...requestData,
+            branchId: requestData.branchId.toLowerCase() // Ensure UUID is lowercase
           })
         }
       );
 
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
       console.log('API Response:', data);
-
+      
       if (data?.outputNames) {
         const transformedItems = Object.entries(data.outputNames)
-          .map(([name, details]: [string, any]) => {
-            return {
-              name: name,
-              price: Array.isArray(details) ? details[1]?.toString() || "0.00" : "0.00",
-              category: Array.isArray(details) ? details[0]?.toString() || "0" : "0"
-            };
-          });
+          .map(([name, details]: [string, any]) => ({
+            name,
+            price: Array.isArray(details) ? details[1]?.toString() || "0.00" : "0.00",
+            category: Array.isArray(details) ? details[0]?.toString() || "0" : "0"
+          }));
         setItems(transformedItems);
       } else {
         setItems([]);
       }
     } catch (error) {
       console.error("Error:", error);
+      setError(error instanceof Error ? error.message : "Failed to load items");
       setItems([]);
     } finally {
       setLoading(false);
@@ -96,9 +123,11 @@ export default function MostSelling() {
     }
   };
 
+  // Fetch data when selected branch changes
   useEffect(() => {
+    console.log('Selected Branch changed:', selectedBranch);
     fetchMostSellingItems();
-  }, []);
+  }, [selectedBranch]);
 
   return (
     <View style={styles.container}>

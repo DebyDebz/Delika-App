@@ -70,9 +70,39 @@ export default function Login() {
 
       if (userResponse.ok) {
         const userData = await userResponse.json();
-        await AsyncStorage.setItem('userData', JSON.stringify(userData));
-        globalThis.userData = userData;
-        setShowOTPModal(true); // Show OTP modal instead of navigation
+        console.log('Raw user data:', userData);
+        
+        try {
+          const restaurantData = userData._restaurantTable?.[0];
+          
+          // Check if permission fields exist and are true (restricted)
+          const hasRestrictions = restaurantData && (
+            restaurantData.Reports === true || 
+            restaurantData.Inventory === true || 
+            restaurantData.Transactions === true
+          );
+
+          if (hasRestrictions && restaurantData) {
+            userData.permissions = {
+              canViewReports: restaurantData.Reports !== true,
+              canViewInventory: restaurantData.Inventory !== true,
+              canViewTransactions: restaurantData.Transactions !== true
+            };
+          } else {
+            delete userData.permissions;
+          }
+          
+          await AsyncStorage.setItem('userData', JSON.stringify(userData));
+          globalThis.userData = userData;
+          
+          // First show OTP modal
+          setShowOTPModal(true);
+          
+          // Navigation will be handled by the OTP component after verification
+        } catch (error) {
+          console.error('Error processing permissions:', error);
+          Alert.alert('Error', 'Failed to process user permissions');
+        }
       } else {
         Alert.alert('Error', 'Failed to get user data');
       }

@@ -1,7 +1,10 @@
 import { View, Text, StyleSheet, Image } from 'react-native';
 
-export default function TotalOrders() {
-  const orders = global.dashboardData?.totalOrders || 0;
+interface TotalOrdersProps {
+  value: number;
+}
+
+export default function TotalOrders({ value }: TotalOrdersProps) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -11,7 +14,7 @@ export default function TotalOrders() {
         />
         <Text style={styles.title}>Total Orders</Text>
       </View>
-      <Text style={styles.amount}>{orders.toLocaleString()}</Text>
+      <Text style={styles.amount}>{value.toLocaleString()}</Text>
     </View>
   );
 }

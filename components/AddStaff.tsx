@@ -298,7 +298,7 @@ const AddStaff = ({ visible, onClose }: AddStaffProps) => {
             onPress={handleSubmit}
           >
             <MaterialIcons name="check" size={24} color="#FFF" />
-            <Text style={styles.submitButtonText}>Add Staff Member</Text>
+            <Text style={styles.submitButtonText}>Add Member</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

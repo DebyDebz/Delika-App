@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-start',
-    paddingTop: 310,
+    paddingTop: 100,
   },
   filterModal: {
     backgroundColor: '#FFFFFF',
@@ -107,6 +107,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
+    
   },
   filterTitle: {
     fontSize: 18,
@@ -129,6 +130,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#EEEEEE',
     width: '100%',
     marginVertical: 5,
+    
   },
   radioContainer: {
     flexDirection: 'row',
