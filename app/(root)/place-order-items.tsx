@@ -1,3 +1,4 @@
+import React from 'react';
 import PlaceOrderItems from '../../components/PlaceOrderItems';
 import { useRouter } from 'expo-router';
 
@@ -11,7 +12,12 @@ export default function PlaceOrderItemsScreen() {
       quantity={5}
       imageUrl=""
       inStock="1"
-      onSelect={() => router.back()}
+      onSelect={(item) => {
+        console.log(item);
+        router.back();
+      }}
+      visible={true}
+      onClose={() => router.back()}
     />
   );
 } 

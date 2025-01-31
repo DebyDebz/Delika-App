@@ -1,3 +1,4 @@
+import React from 'react';
 import PlaceOrder from '../../components/PlaceOrder';
 import { Stack } from 'expo-router';
 

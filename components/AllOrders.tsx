@@ -198,7 +198,13 @@ export default function AllOrders({ onFilterPress, orders, selectedDate }: AllOr
                 </View>
                 <View style={styles.dropoffInfo}>
                   <Ionicons name="location-outline" size={16} color="#666666" />
-                  <Text style={styles.dropoffName}>{item.dropoffName}</Text>
+                  <Text 
+                    style={styles.dropoffName}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {item.dropoffName}
+                  </Text>
                 </View>
               </View>
             </TouchableOpacity>
@@ -354,10 +360,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    flex: 1,
   },
   dropoffName: {
     fontSize: 14,
     color: '#666666',
+    flex: 1,
   },
   listContainer: {
     padding: 15,

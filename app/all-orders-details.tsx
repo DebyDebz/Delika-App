@@ -92,7 +92,13 @@ export default function AllOrdersDetails() {
           {params.dropoffName && (
             <View style={styles.row}>
               <Text style={styles.label}>Dropoff:</Text>
-              <Text style={styles.value}>{params.dropoffName}</Text>
+              <Text 
+                style={[styles.value, { flex: 1, textAlign: 'right' }]} 
+                numberOfLines={1} 
+                ellipsizeMode="tail"
+              >
+                {params.dropoffName}
+              </Text>
             </View>
           )}
         </View>
@@ -164,11 +170,13 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     color: '#666',
+    flex: 0.4,
   },
   value: {
     fontSize: 16,
     color: '#666',
     fontWeight: '500',
+    flex: 0.6,
   },
   highlightedValue: {
     color: '#FE5B18', // Highlighted color for total price and payment status

@@ -88,6 +88,7 @@ export default function Menu({ onClose }: MenuProps) {
       description: 'Team Management',
       alwaysShow: true
     },
+   
     { 
       icon: require('../assets/images/transaction.png'),
       label: 'Transactions', 
@@ -100,7 +101,7 @@ export default function Menu({ onClose }: MenuProps) {
       label: 'Reports', 
       route: '/menu_report',
       description: 'Analytics & Stats',
-      permission: 'canViewReports'
+      alwaysShow: true
     },
     { 
       icon: require('../assets/images/setting.png'),

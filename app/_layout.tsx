@@ -7,8 +7,9 @@ import { useRouter } from "expo-router"
 import { Animated, TouchableOpacity } from "react-native"
 import Profile from "../components/Profile"
 import { SelectedBranchProvider } from '../context/SelectedBranchContext'
+import { Slot } from 'expo-router'
 
-function RootLayout() {
+export default function RootLayout() {
   const router = useRouter()
   const [isProfileVisible, setIsProfileVisible] = useState(false)
   const slideAnim = useRef(new Animated.Value(0)).current
@@ -37,28 +38,24 @@ function RootLayout() {
   }
 
   return (
-    <SelectedBranchProvider>
-      <GestureHandlerRootView style={{flex: 1}}>
-        <SafeAreaProvider>
-          <NotificationProvider>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="index" />
-              <Stack.Screen name="home" />
-              <Stack.Screen name="menu_report" />
-            </Stack>
-            <Profile 
-              isVisible={isProfileVisible}
-              onClose={() => toggleProfile()}
-              slideAnim={slideAnim}
-            />
-            <TouchableOpacity onPress={toggleProfile}>
-              {/* Your existing profile picture component */}
-            </TouchableOpacity>
-          </NotificationProvider>
-        </SafeAreaProvider>
-      </GestureHandlerRootView>
-    </SelectedBranchProvider>
+    <SafeAreaProvider>
+      <SelectedBranchProvider>
+        <NotificationProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="home" />
+            <Stack.Screen name="menu_report" />
+          </Stack>
+          <Profile 
+            isVisible={isProfileVisible}
+            onClose={() => toggleProfile()}
+            slideAnim={slideAnim}
+          />
+          <TouchableOpacity onPress={toggleProfile}>
+            {/* Your existing profile picture component */}
+          </TouchableOpacity>
+        </NotificationProvider>
+      </SelectedBranchProvider>
+    </SafeAreaProvider>
   )
 }
-
-export default RootLayout

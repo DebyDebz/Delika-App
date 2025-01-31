@@ -42,6 +42,8 @@ export default function PlaceOrder() {
     const [payNow, setPayNow] = useState(true);
     const [requestPayment, setRequestPayment] = useState(false);
     const [payLater, setPayLater] = useState(false);
+    const isMenuBlurred = globalThis.userData?.permissions?.canViewInventory === false;
+    console.log('Menu Blurred Status:', isMenuBlurred); // Debug log
 
     const subtotal = selectedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const total = subtotal + deliveryFee;
@@ -97,53 +99,62 @@ export default function PlaceOrder() {
 
     const handlePlaceOrder = async () => {
         try {
-            if (!pickupLocation || !deliveryLocation) {
-                Alert.alert('Error', 'Please provide pickup and delivery locations');
+            // Basic validation for required fields
+            if (!customerName || !customerPhone || !deliveryLocation) {
+                Alert.alert('Error', 'Please fill in all required fields');
                 return;
             }
 
+            // If menu is blurred, skip item validation completely
+            if (!isMenuBlurred) {
+                // Only validate items if menu is not blurred
+                if (selectedItems.length === 0) {
+                    Alert.alert('Error', 'Please select at least one item');
+                    return;
+                }
+            }
+
             const orderData = {
-                restaurantId: globalThis.userData?.restaurantId,
-                branchId: globalThis.userData?.branchId,
-                products: selectedItems.map(item => ({
+                restaurantId: globalThis.userData?._restaurantTable[0]?.id,
+                branchId: globalThis.userData?.branchesTable?.id,
+                products: isMenuBlurred ? [] : selectedItems.map(item => ({
                     name: item.name,
                     price: item.price.toString(),
                     quantity: item.quantity.toString()
                 })),
                 pickup: {
-                    fromAddress: pickupLocation.address,
-                    fromLongitude: pickupLocation.longitude,
-                    fromLatitude: pickupLocation.latitude,
-                    //fromName: globalThis.userData?._restaurantTable[0].restaurantName,
-                    //fromPhone: globalThis.userData?.restaurantPhoneNumber,
-                    //fromCity: "Accra" // Or extract from address
+                    fromAddress: pickupLocation?.address || '',
+                    fromLongitude: pickupLocation?.longitude?.toString() || "0",
+                    fromLatitude: pickupLocation?.latitude?.toString() || "0"
                 },
-                dropOff: {
+                dropOff: [{
                     toAddress: deliveryLocation,
-                    toLongitude: dropoffLocation?.longitude || 0,
-                    toLatitude: dropoffLocation?.latitude || 0,
-                   // toName: customerName,
-                    //toPhone: customerPhone,
-                    //toCity: "Accra" // Or extract from address
-                },
+                    toLongitude: dropoffLocation?.longitude?.toString() || "0",
+                    toLatitude: dropoffLocation?.latitude?.toString() || "0"
+                }],
                 customerName,
                 customerPhoneNumber: customerPhone,
-                orderNumber: Math.floor(Math.random() * 1000000),
+                orderNumber: Math.floor(Math.random() * 1000000).toString(),
                 deliveryDistance: deliveryDistance.toString(),
-                orderDate: new Date().toISOString().split('T')[0],
-                deliveryPrice: deliveryFee,
-                orderPrice: subtotal.toString(),
-                totalPrice: total.toString(),
+                orderDate: new Date().toISOString(),
+                deliveryPrice: Number(deliveryFee).toFixed(2),
+                orderPrice: isMenuBlurred ? "0.00" : Number(subtotal).toFixed(2),
+                totalPrice: isMenuBlurred 
+                    ? Number(deliveryFee).toFixed(2) 
+                    : Number(total).toFixed(2),
                 pickupName: restaurantLocation,
                 dropoffName: deliveryLocation,
-                foodAndDeliveryFee: true,
-                onlyDeliveryFee: false,
+                foodAndDeliveryFee: !isMenuBlurred,
+                onlyDeliveryFee: isMenuBlurred,
                 payNow: requestPayment,
                 payLater: payLater,
-                paymentStatus: payNow ? "Pending" : "Not Paid",
+                paymentStatus: requestPayment ? "Pending" : "Paid",
                 orderStatus: OrderStatus.Assigned,
-                orderComment: ""
+                orderComment: "",
+                
             };
+
+            console.log('Sending order data:', orderData);
 
             const response = await fetch(
                 'https://api-server.krontiva.africa/api:uEBBwbSs/delikaquickshipper_orders_table',
@@ -157,24 +168,29 @@ export default function PlaceOrder() {
                 }
             );
 
+            const responseData = await response.json();
+            console.log('API Response:', responseData);
+
             if (!response.ok) {
-                throw new Error('Failed to place order');
+                throw new Error(`API Error: ${response.status} - ${responseData.message || 'Unknown error'}`);
             }
 
             Alert.alert('Success', 'Order placed successfully', [
                 {
                     text: 'OK',
                     onPress: () => {
-                        // Trigger orders refresh and navigate back
-                        globalThis.refreshOrders?.(); // Add this function to global
+                        globalThis.refreshOrders?.();
                         router.back();
                     }
                 }
             ]);
 
         } catch (error) {
-            console.error('Error placing order:', error);
-            Alert.alert('Error', 'Failed to place order');
+            console.error('Order placement error:', error);
+            Alert.alert(
+                'Error',
+                'Failed to place order. Please check your connection and try again.'
+            );
         }
     };
 
@@ -251,17 +267,23 @@ export default function PlaceOrder() {
                 </View>
  
                 {/* Order Items */}
-                <View style={styles.card}>
+                <View style={[
+                    styles.card,
+                    isMenuBlurred && styles.blurredCard
+                ]}>
                     <View style={styles.cardHeader}>
                         <MaterialCommunityIcons name="food-variant" size={24} color={Color.otherOrange} />
                         <Text style={styles.cardTitle}>Order Items</Text>
                     </View>
                     <TouchableOpacity
                         style={styles.selectButton}
-                        onPress={() => setIsItemsModalVisible(true)}
+                        onPress={() => !isMenuBlurred ? setIsItemsModalVisible(true) : null}
+                        disabled={isMenuBlurred}
                     >
-                        <Text style={styles.selectButtonText}>Select Menu Items</Text>
-                        <MaterialIcons name="add-circle-outline" size={24} color={Color.otherOrange} />
+                        <Text style={[styles.selectButtonText, isMenuBlurred && styles.disabledText]}>
+                            Select Menu Items
+                        </Text>
+                        <MaterialIcons name="add-circle-outline" size={24} color={!isMenuBlurred ? Color.otherOrange : '#ccc'} />
                     </TouchableOpacity>
  
                     {selectedItems.map((item) => (
@@ -294,7 +316,7 @@ export default function PlaceOrder() {
                         </View>
                         <View style={[styles.summaryRow, styles.totalRow]}>
                             <Text style={styles.totalLabel}>Total Amount</Text>
-                            <Text style={styles.totalValue}>GH₵{total.toFixed(2)}</Text>
+                            <Text style={styles.totalValue}>GH₵{Number(total).toFixed(2)}</Text>
                         </View>
                     </View>
                     <View style={styles.paymentOptions}>
@@ -635,5 +657,12 @@ const styles = StyleSheet.create({
     },
     paymentButtonTextActive: {
         color: '#FFF',
+    },
+    blurredCard: {
+        opacity: 0.5,
+        backgroundColor: '#F5F5F5',
+    },
+    disabledText: {
+        color: '#999',
     },
 });

@@ -106,37 +106,39 @@ export default function OTP({ visible, onClose, onVerify, phoneNumber, email }: 
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            otp: code,
+            OTP: code,
             type: true,
             contact: email
           })
         }
       );
 
-      if (response.ok) {
-        try {
-          // Get stored active menu index
-          const activeIndex = await AsyncStorage.getItem('activeMenuIndex');
-          
-          // Check permissions and navigate accordingly
-          if (activeIndex === '0' && !globalThis.userData?.permissions?.canViewOverview) {
-            router.replace('/orders' as any);
-          } else if (activeIndex === '0') {
-            router.replace('/home' as any);
-          } else if (activeIndex === '1') {
-            router.replace('/orders' as any);
-          } else {
-            router.replace('/orders' as any);
-          }
-        } catch (error) {
-          console.error('Navigation error:', error);
+      const data = await response.json();
+      console.log('OTP Response:', data);
+
+      if (data.otpValidate === "otpFound") {
+        // Successful login
+        const activeIndex = await AsyncStorage.getItem('activeMenuIndex');
+        
+        // Default to orders page if no overview permission
+        if (!globalThis.userData?.permissions?.canViewOverview) {
+          await AsyncStorage.setItem('activeMenuIndex', '1');
+          router.replace('/orders' as any);
+          return;
+        }
+
+        // Navigate based on stored menu index
+        if (activeIndex) {
+          router.replace((activeIndex === '0' ? '/home' : '/orders') as any);
+        } else {
           router.replace('/orders' as any);
         }
       } else {
-        const data = await response.json();
-        Alert.alert('Error', data.message || 'Invalid OTP');
+        // Invalid OTP
+        Alert.alert('Error', 'Incorrect OTP code');
       }
     } catch (error) {
+      console.error('OTP Verification Error:', error);
       Alert.alert('Error', 'Failed to verify OTP');
     }
   };

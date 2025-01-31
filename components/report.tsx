@@ -36,6 +36,10 @@ interface OrderType {
     price: string;
     quantity: string;
   }>;
+  deliveryPrice?: string | number;
+  courierName?: string;
+  pickupName?: string;
+  dropoffName?: string;
 }
 
 interface OrderReportProps {
@@ -77,9 +81,9 @@ const styles = StyleSheet.create({
   },
   orderCard: {
     backgroundColor: '#FFF',
-    margin: 8,
-    padding: 16,
+    padding: 20,
     borderRadius: 12,
+    marginBottom: 12,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -105,6 +109,7 @@ const styles = StyleSheet.create({
   orderDate: {
     fontSize: 14,
     color: '#666',
+    marginBottom: 12,
   },
   customerInfo: {
     marginBottom: 12,
@@ -340,6 +345,7 @@ const styles = StyleSheet.create({
   summaryRow: {
     flexDirection: 'row',
     gap: 12,
+    marginBottom: 16,
   },
   summaryCard: {
     flex: 1,
@@ -359,13 +365,22 @@ const styles = StyleSheet.create({
       },
     }),
   },
+  summaryIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Color.otherOrange,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
   summaryStatus: {
     fontSize: 14,
     color: '#666',
     marginBottom: 8,
   },
   summaryAmount: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#1A1A1A',
     marginBottom: 4,
@@ -373,6 +388,8 @@ const styles = StyleSheet.create({
   summaryCount: {
     fontSize: 12,
     color: '#666',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   monthSelector: {
     margin: 16,
@@ -522,6 +539,30 @@ const styles = StyleSheet.create({
     padding: 12,
     backgroundColor: '#FFFFFF',
   },
+  deliverySection: {
+    padding: 16,
+  },
+  ordersList: {
+    gap: 8,
+  },
+  courierName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1A1A1A',
+    marginBottom: 12,
+  },
+  location: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+    paddingLeft: 4,
+  },
+  price: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Color.otherOrange,
+    marginTop: 12,
+  },
 });
 
 export default function EnhancedReport({ initialRestaurantId, initialBranchId }: OrderReportProps) {
@@ -534,8 +575,15 @@ export default function EnhancedReport({ initialRestaurantId, initialBranchId }:
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
+  const [isMenuBlurred, setIsMenuBlurred] = useState(false);
+  const [revenueTotal, setRevenueTotal] = useState(0);
+  const [deliveryTotal, setDeliveryTotal] = useState(0);
 
   const chartRef = useRef<ViewShot | null>(null);
+
+  const isAdmin = globalThis.userData?.role === 'Admin';
+  console.log('User Role:', globalThis.userData?.role);
+  console.log('Is Admin:', isAdmin);
 
   const fetchOrders = async () => {
     try {
@@ -595,6 +643,33 @@ export default function EnhancedReport({ initialRestaurantId, initialBranchId }:
     fetchOrders();
   }, [initialRestaurantId, initialBranchId]);
 
+  useEffect(() => {
+    setIsMenuBlurred(globalThis.userData?.permissions?.canViewInventory === false);
+  }, []);
+
+  useEffect(() => {
+    const filteredOrders = orders.filter(order => {
+      const orderDate = new Date(order.orderDate);
+      const orderMonth = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, '0')}`;
+      return orderMonth === selectedMonth;
+    });
+
+    console.log('Raw Orders Data:', orders); // Debug: check full orders data
+    console.log('Filtered Orders:', filteredOrders); // Debug: check filtered orders
+    
+    // Calculate delivery fees total
+    const deliverySum = filteredOrders.reduce((sum, order) => {
+      console.log('Order:', order); // Debug: check each order
+      console.log('Delivery Price:', order.deliveryPrice); // Debug: check delivery price
+      return sum + Number(order.deliveryPrice || 0);
+    }, 0);
+    
+    setDeliveryTotal(deliverySum);
+    setRevenueTotal(deliverySum);
+    
+    console.log('Final Delivery Sum:', deliverySum);
+  }, [orders, selectedMonth]);
+
   const calculateMetrics = () => {
     const filteredOrders = orders.filter(order => {
       const orderDate = new Date(order.orderDate);
@@ -602,27 +677,30 @@ export default function EnhancedReport({ initialRestaurantId, initialBranchId }:
       return orderMonth === selectedMonth;
     });
 
-    const totalRevenue = filteredOrders.reduce((sum, order) => {
-      return sum + Number(order.totalPrice);
-    }, 0);
+    // Calculate only delivery metrics if menu is blurred
+    if (isMenuBlurred) {
+      const totalDeliveryFees = filteredOrders.reduce((sum, order) => 
+        sum + Number(order.deliveryPrice || 0), 0);
 
-    const numberOfOrders = filteredOrders.length;
+      return {
+        totalPrice: totalDeliveryFees,  // Total Revenue will show delivery fees
+        totalProducts: filteredOrders.length,  // Total Orders remains the same
+        averageOrderValue: filteredOrders.length > 0 
+          ? totalDeliveryFees / filteredOrders.length 
+          : 0,  // Average is now per delivery
+      };
+    }
 
-    const averageOrderValue = numberOfOrders > 0 
-      ? totalRevenue / numberOfOrders 
-      : 0;
-
-    console.log('Average Order Calculation:', {
-      totalRevenue,
-      numberOfOrders,
-      averageOrderValue
-    });
+    // Original calculation for non-blurred menu
+    const totalRevenue = filteredOrders.reduce((sum, order) => 
+      sum + Number(order.totalPrice || 0), 0);
 
     return {
       totalPrice: totalRevenue,
-      totalProducts: numberOfOrders,
-      averageOrderValue,
-      orderCount: numberOfOrders
+      totalProducts: filteredOrders.length,
+      averageOrderValue: filteredOrders.length > 0 
+        ? totalRevenue / filteredOrders.length 
+        : 0
     };
   };
 
@@ -939,15 +1017,21 @@ export default function EnhancedReport({ initialRestaurantId, initialBranchId }:
             <div class="metrics-grid">
               <div class="metric-card">
                 <div class="metric-value">GH₵ ${metrics.totalPrice.toLocaleString('en-GH', { minimumFractionDigits: 2 })}</div>
-                <div class="metric-label">Total Revenue</div>
+                <div class="metric-label">
+                  {isMenuBlurred ? 'Total Delivery Revenue' : 'Total Revenue'}
+                </div>
               </div>
               <div class="metric-card">
                 <div class="metric-value">${metrics.totalProducts}</div>
-                <div class="metric-label">Total Orders</div>
+                <div class="metric-label">
+                  {isMenuBlurred ? 'Total Deliveries' : 'Total Orders'}
+                </div>
               </div>
               <div class="metric-card">
                 <div class="metric-value">GH₵ ${metrics.averageOrderValue.toLocaleString('en-GH', { minimumFractionDigits: 2 })}</div>
-                <div class="metric-label">Average Order Value</div>
+                <div class="metric-label">
+                  {isMenuBlurred ? 'Average Delivery Fee' : 'Average Order Value'}
+                </div>
               </div>
             </div>
 
@@ -1096,7 +1180,7 @@ export default function EnhancedReport({ initialRestaurantId, initialBranchId }:
 
             <View style={styles.metricCard}>
               <View style={[styles.metricIconContainer, { backgroundColor: '#4CAF50' }]}>
-                <MaterialIcons name="shopping-basket" size={20} color="#FFF" />
+                <MaterialIcons name="local-shipping" size={20} color="#FFF" />
               </View>
               <Text style={styles.metricValue}>
                 {metrics.totalProducts}
@@ -1105,32 +1189,13 @@ export default function EnhancedReport({ initialRestaurantId, initialBranchId }:
             </View>
           </View>
 
-          <View style={[styles.metricCard, styles.averageCard]}>
-            <View style={styles.metricHeader}>
-              <View style={[styles.metricIconContainer, { backgroundColor: '#2196F3' }]}>
-                <MaterialIcons name="trending-up" size={20} color="#FFF" />
-              </View>
-              <Text style={[styles.metricTrend, { color: '#2196F3' }]}>+12%</Text>
+          {!isAdmin && (
+            <View style={styles.summaryRow}>
             </View>
-            <View style={styles.averageContent}>
-              <View>
-                <Text style={styles.metricValue}>
-                  GH₵ {metrics.averageOrderValue.toFixed(2)}
-                </Text>
-                <Text style={styles.metricLabel}>Average Order Value</Text>
-              </View>
-              <View style={styles.averageChart}>
-                <View style={styles.chartBar} />
-                <View style={[styles.chartBar, { height: '60%' }]} />
-                <View style={[styles.chartBar, { height: '80%' }]} />
-                <View style={[styles.chartBar, { height: '70%' }]} />
-                <View style={[styles.chartBar, { height: '90%' }]} />
-              </View>
-            </View>
-          </View>
+          )}
         </View>
 
-        <View style={styles.paymentOverview}>
+        <View style={[styles.paymentOverview, { marginTop: -16 }]}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Payment Overview</Text>
           </View>
@@ -1183,6 +1248,31 @@ export default function EnhancedReport({ initialRestaurantId, initialBranchId }:
             </View>
           </View>
         </View>
+
+        {!isAdmin && isMenuBlurred && (
+          <View style={styles.deliverySection}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Delivery Information</Text>
+            </View>
+            <View style={styles.ordersList}>
+              {orders.map((order, index) => (
+                <View key={index} style={styles.orderCard}>
+                  <Text style={styles.orderDate}>{order.orderDate}</Text>
+                  <Text style={styles.courierName}>{order.courierName || 'No Courier'}</Text>
+                  <Text style={styles.location}>
+                    From: {order.pickupName || 'Restaurant'}
+                  </Text>
+                  <Text style={styles.location}>
+                    To: {order.dropoffName || 'Not specified'}
+                  </Text>
+                  <Text style={styles.price}>
+                    GH₵ {Number(order.deliveryPrice || 0).toFixed(2)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
 
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Orders for {new Date(selectedMonth).toLocaleString('default', { month: 'long', year: 'numeric' })}</Text>

@@ -12,4 +12,16 @@ export enum OrderStatus {
     Completed = 'Completed',
     Cancelled = 'Cancelled',
     DeliveryFailed = 'DeliveryFailed'
+}
+
+interface OrderType {
+  id: string;
+  orderNumber: string;
+  orderStatus: string;
+  totalPrice: number;
+  deliveryPrice: number;
+  customerName: string;
+  paymentStatus: string;
+  orderDate: string;
+  // ... other existing properties
 } 

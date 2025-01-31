@@ -18,7 +18,12 @@ import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 interface PlaceOrderItemsProps {
   visible: boolean;
   onClose: () => void;
-  onSelect: (item: any) => void;
+  onSelect: (item: MenuItem) => void;
+  name?: string;
+  price?: number;
+  quantity?: number;
+  imageUrl?: string;
+  inStock?: string;
 }
 
 interface MenuItem {
@@ -34,7 +39,12 @@ interface MenuItem {
 export default function PlaceOrderItems({ 
   visible,
   onClose,
-  onSelect
+  onSelect,
+  name,
+  price,
+  quantity,
+  imageUrl,
+  inStock
 }: PlaceOrderItemsProps) {
 
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
